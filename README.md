@@ -1,2 +1,2 @@
-# et-run
-Embedded test runner experiment in Rust
+# et
+Embedded test runner experiment in Rust.
