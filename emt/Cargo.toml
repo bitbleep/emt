@@ -1,7 +1,9 @@
 [package]
-name = "runner"
+name = "emt"
 version = "0.1.0"
 authors = ["Martin Carltoft <martin@bitbleep.com>"]
 edition = "2018"
 
 [dependencies]
+probe-rs = "0.8.0"
+common = { path = "../common" }
