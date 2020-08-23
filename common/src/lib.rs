@@ -1,6 +1,6 @@
 #![no_std]
 
-use core::time::Duration;
+pub mod link;
 
 pub struct Meta {
     pub firmware_id: &'static str,
@@ -15,18 +15,9 @@ impl Meta {
 }
 
 pub struct Test {
+    pub name: &'static str,
     pub description: &'static str,
     pub requires_human_interaction: bool,
     pub should_panic: bool,
-    pub timeout: Duration,
-}
-
-pub enum Event {}
-
-pub enum Error {}
-
-pub trait MemoryIo {
-    fn send(&self, event: Event) -> Result<(), Error>;
-    fn receive(&self) -> Result<(), Error>;
-    fn poll(&self) -> Result<(), Error>;
+    pub timeout_ms: u32,
 }
