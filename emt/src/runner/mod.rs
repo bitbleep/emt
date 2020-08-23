@@ -1,4 +1,4 @@
-use common::Meta;
+use common::{Meta, Test};
 
 pub mod probe;
 pub mod qemu;
@@ -10,4 +10,5 @@ pub enum Error {
 
 pub trait Runner {
     fn meta(&mut self) -> Meta;
+    fn start(&mut self, id: u32) -> Result<Test, Error>;
 }

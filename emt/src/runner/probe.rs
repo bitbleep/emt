@@ -1,4 +1,4 @@
-use common::Meta;
+use common::{Meta, Test};
 
 use crate::runner::Error;
 
@@ -12,6 +12,10 @@ impl Runner {
 
 impl crate::runner::Runner for Runner {
     fn meta(&mut self) -> Meta {
-        panic!("");
+        unimplemented!();
+    }
+
+    fn start(&mut self, _id: u32) -> Result<Test, Error> {
+        unimplemented!();
     }
 }
