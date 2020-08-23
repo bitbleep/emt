@@ -1,2 +1,2 @@
 [workspace]
-members = ["common", "emt", "example", "runtime"]
+members = ["common", "emt", "runtime"]
