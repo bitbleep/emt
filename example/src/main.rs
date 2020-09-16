@@ -10,6 +10,8 @@ use nrf52832_hal::{
     timer::Timer,
 };
 
+use runtime::Runtime;
+
 /// These are the resources used by all tests in this test firmware.
 pub struct Resources {
     timer: Timer<TIMER0>,
@@ -21,6 +23,8 @@ fn main() -> ! {
     let mut resources = Resources {
         timer: Timer::new(board_peripherals.TIMER0),
     };
+
+    let _runtime = Runtime::new();
 
     tests::simple_wait(&mut resources);
 
