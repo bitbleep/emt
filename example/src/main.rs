@@ -1,32 +1,28 @@
 #![no_std]
 #![no_main]
 
+mod tests;
+
 extern crate panic_rtt;
 
 use nrf52832_hal::{
-    clocks::Clocks,
-    gpio,
-    pac::{interrupt, CorePeripherals, Interrupt, Peripherals, TIMER1},
-    saadc::{Saadc, SaadcConfig},
-    spim,
-    temp::Temp,
+    pac::{Peripherals, TIMER0},
     timer::Timer,
-    twim::{self, Twim},
-    uarte::{Baudrate, Parity, Uarte},
 };
+
+/// These are the resources used by all tests in this test firmware.
+pub struct Resources {
+    timer: Timer<TIMER0>,
+}
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
-    // rtt::init();
-    // rtt::set_level(LevelFilter::Debug);
+    let board_peripherals = Peripherals::take().unwrap();
+    let mut resources = Resources {
+        timer: Timer::new(board_peripherals.TIMER0),
+    };
 
-    // info!("device starting");
-
-    let cp = CorePeripherals::take().unwrap();
-    let p = Peripherals::take().unwrap();
-    // let mut board = Board::new(cp, p);
-    // let _clock = Clocks::new(board.CLOCK).set_lfclk_src_rc().start_lfclk();
-    // let mut timer = Timer::new(board.TIMER1);
+    tests::simple_wait(&mut resources);
 
     loop {
         cortex_m::asm::wfi();
