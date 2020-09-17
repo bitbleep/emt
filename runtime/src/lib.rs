@@ -9,10 +9,9 @@ struct RuntimeBlock {
     data: [u8; 488],
 }
 
-static mut RUNTIME_BLOCK: RuntimeBlock = RuntimeBlock {
-    magic_sequence: [
-        0x45, 0x4d, 0x54, 0x2d, 0x52, 0x55, 0x4e, 0x54, 0x49, 0x4d, 0x45, 0x00,
-    ],
+#[no_mangle]
+static mut EMT_RUNTIME_BLOCK: RuntimeBlock = RuntimeBlock {
+    magic_sequence: [0u8; 12],
     status: 0,
     event_id: 0,
     data_size: 0,
@@ -21,10 +20,13 @@ static mut RUNTIME_BLOCK: RuntimeBlock = RuntimeBlock {
 
 pub fn start() -> ! {
     unsafe {
-        RUNTIME_BLOCK.magic_sequence[11] = 0x20;
-    }
-    loop {
-        // todo: needs to actually do something
-        // process event
+        EMT_RUNTIME_BLOCK.magic_sequence = *b"EMT-RUNTIME ";
+        loop {
+            if EMT_RUNTIME_BLOCK.status == 1 {
+                EMT_RUNTIME_BLOCK.status = 2;
+            }
+            // todo: needs to actually do something
+            // process event
+        }
     }
 }

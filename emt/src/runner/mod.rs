@@ -30,7 +30,7 @@ fn detect_runtime<T>(link_io: &mut T, base_address: u32, size: u32) -> Result<u3
 where
     T: link::Read,
 {
-    let mut buf = [0u8; 32768];
+    let mut buf = [0u8; 1024];
     let mut address = base_address;
     let mut offset = 0;
     while address < base_address + size {
@@ -44,7 +44,6 @@ where
                 return Ok(address + index as u32 - MAGIC_SEQUENCE.len() as u32);
             }
         }
-        eprintln!("address: 0x{:08x}", address);
         address += len as u32;
     }
     Err(Error::NoRuntime)
