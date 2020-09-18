@@ -3,7 +3,9 @@ const STATUS_OFFSET: usize = 12;
 const HEADER_OFFSET: usize = 16;
 const BLOB_OFFSET: usize = 24;
 
+#[repr(u32)]
 pub enum Status {
+    NotInitialized = 0,
     Idle,
     Sent,
     Received,
@@ -25,14 +27,19 @@ impl Header {
     }
 }
 
+#[repr(u32)]
 pub enum Event {
-    None,
+    None = 0,
+    Meta,
+    Test,
 }
 
 impl Event {
     pub fn id(&self) -> u32 {
         match *self {
             Event::None => 0,
+            Event::Meta => 1,
+            Event::Test => 2,
         }
     }
 
