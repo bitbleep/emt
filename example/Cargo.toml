@@ -5,6 +5,7 @@ authors = ["Martin Carltoft <martin@bitbleep.com"]
 edition = "2018"
 
 [dependencies]
+common = { path = "../common" }
 runtime = { path = "../runtime" }
 cortex-m-rt = "0.6.11"
 cortex-m = "0.6.2"

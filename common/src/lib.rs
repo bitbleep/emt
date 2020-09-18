@@ -3,15 +3,9 @@
 pub mod link;
 
 pub struct Meta {
-    pub firmware_id: &'static str,
+    pub id: &'static str,
     pub version: &'static str,
-    tests: u32,
-}
-
-impl Meta {
-    pub fn tests(&self) -> u32 {
-        self.tests
-    }
+    pub num_tests: u32,
 }
 
 pub struct Test {

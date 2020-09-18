@@ -5,10 +5,10 @@ const BLOB_OFFSET: usize = 24;
 
 #[repr(u32)]
 pub enum Status {
-    NotInitialized = 0,
+    NotReady = 0,
     Idle,
-    Sent,
-    Received,
+    Send,
+    Receive,
 }
 
 pub struct Header {
@@ -113,7 +113,6 @@ where
         Ok(())
     }
 
-    /// expects data to be available immediately?
     pub fn receive(&mut self) -> Result<Event, Error> {
         // let header = self.poll()?;
         unimplemented!();

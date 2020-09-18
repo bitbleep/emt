@@ -2,6 +2,11 @@
 
 use common::link::{self, Buffer, Event, Link, Read, Write};
 
+pub struct Test {
+    pub meta: common::Test,
+    pub run: fn(),
+}
+
 #[repr(C)]
 struct RuntimeBlock {
     magic_sequence: [u8; 12],
@@ -58,7 +63,13 @@ impl link::Write for LinkIo {
     }
 }
 
-pub fn start() -> ! {
+pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) -> ! {
+    let runtime_meta = common::Meta {
+        id,
+        version,
+        num_tests: tests.len() as u32,
+    };
+
     let mut link = unsafe {
         EMT_RUNTIME_BLOCK.init();
         link::Link::new(0, LinkIo::new()) // todo: 0 should be address of EMT_RUNTIME_BLOCK
