@@ -3,7 +3,7 @@
 mod runtime_block;
 
 use common::runtime::{Event, Meta, Runtime};
-use common::test::Context;
+use common::test::{self, Context};
 use runtime_block::RuntimeBlock;
 
 #[no_mangle]
@@ -53,6 +53,16 @@ pub fn inject(event: Event) -> Result<Event, common::runtime::Error> {
     unsafe { EMT_RUNTIME_BLOCK.request(event) }
 }
 
+/// For testing purposes.
+pub fn read() -> Result<Event<'static>, common::runtime::Error> {
+    unsafe { EMT_RUNTIME_BLOCK.read() }
+}
+
+/// For testing purposes.
+pub fn respond(event: Event) -> Result<(), common::runtime::Error> {
+    unsafe { EMT_RUNTIME_BLOCK.respond(event) }
+}
+
 #[inline(always)]
 fn poll_runtime(runtime_block: &mut RuntimeBlock, meta: Meta, tests: &[Test]) -> Result<(), Error> {
     match runtime_block.read()? {
@@ -62,17 +72,18 @@ fn poll_runtime(runtime_block: &mut RuntimeBlock, meta: Meta, tests: &[Test]) ->
         }
         Event::Test(id) => {
             let id = id as usize;
-            if id >= tests.len() {
-                // todo: Result: FAIL
+            if id < tests.len() {
+                let test = &tests[id];
+                let context_response = Event::Context(test.context);
+                runtime_block.respond(context_response)?;
+                let did_pass = (test.run)();
+                let result_response = Event::Result(test::Result { did_pass });
+                runtime_block.request(result_response)?;
+            } else {
+                // todo: should use a separate status for this
+                let result_response = Event::Result(test::Result { did_pass: false });
+                runtime_block.request(result_response)?;
             }
-            let test = &tests[id];
-            let context_response = Event::Context(test.context);
-            runtime_block.respond(context_response)?;
-            (test.run)();
-            // encode the context and respond
-            // run the test
-            // output the result
-            unimplemented!();
         }
         _ => return Err(Error::UnexpectedEvent),
     }
