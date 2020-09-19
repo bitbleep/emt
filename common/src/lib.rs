@@ -1,12 +1,7 @@
 #![no_std]
 
 pub mod link;
-
-pub struct Meta {
-    pub id: &'static str,
-    pub version: &'static str,
-    pub num_tests: u32,
-}
+pub mod runtime;
 
 pub struct Test {
     pub name: &'static str,

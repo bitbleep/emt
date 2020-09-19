@@ -5,7 +5,7 @@ mod tests;
 
 extern crate panic_rtt;
 
-use nrf52832_hal::{gpio::Level, pac::Peripherals, prelude::*, timer::Timer};
+// use nrf52832_hal::{gpio::Level, pac::Peripherals, prelude::*, timer::Timer};
 use tests::list_tests;
 
 #[cortex_m_rt::entry]

@@ -1,6 +1,6 @@
 use probe_rs::{MemoryInterface, Session};
 
-use common::{link, Meta, Test};
+use common::{link, link::Event, runtime::Meta, Test};
 
 use crate::runner::{detect_runtime, Error};
 
@@ -19,7 +19,8 @@ impl Runner {
         eprintln!("found base address: 0x{:08x}", base_address);
 
         // todo: read meta
-        let link = link::Link::new(base_address, link_io);
+        let mut link = link::Link::new(base_address, link_io);
+        link.send(Event::None).expect("waah");
 
         Ok(Self {
             link,

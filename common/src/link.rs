@@ -3,8 +3,10 @@ const STATUS_OFFSET: usize = 12;
 const HEADER_OFFSET: usize = 16;
 const BLOB_OFFSET: usize = 24;
 
+/// Bloh.
 #[repr(u32)]
 pub enum Status {
+    /// blah
     NotReady = 0,
     Idle,
     Send,

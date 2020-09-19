@@ -1,4 +1,5 @@
-use common::{link, Meta, Test};
+use common::runtime::Meta;
+use common::{link, Test};
 
 pub mod probe;
 pub mod qemu;
