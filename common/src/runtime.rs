@@ -138,7 +138,7 @@ fn decode_str<'a>(from: &'a [u8]) -> Result<(&'a str, usize), Error> {
     if len == 0 {
         return Err(Error::IllegalString);
     }
-    match core::str::from_utf8(&from[..len]) {
+    match core::str::from_utf8(&from[..len - 1]) {
         Ok(value) => Ok((value, len)),
         Err(_) => Err(Error::IllegalString),
     }
