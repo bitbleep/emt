@@ -58,7 +58,6 @@ impl Runtime for RuntimeBlock {
     fn read(&mut self) -> Result<Event, Error> {
         while self.status != Status::Send {}
         let event = Event::decode(self.event_id, &self.data[..self.data_size as usize])?;
-        self.status = Status::Receive;
         Ok(event)
     }
 }

@@ -1,0 +1,9 @@
+[package]
+name = "runtime-test"
+version = "0.1.0"
+authors = ["Martin Carltoft <martin@bitbleep.com>"]
+edition = "2018"
+
+[dependencies]
+common = { path = "../common" }
+runtime = { path = "../runtime" }

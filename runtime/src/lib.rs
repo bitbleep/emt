@@ -15,7 +15,7 @@ pub struct Test {
 }
 
 pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) -> ! {
-    let _runtime_meta = Meta {
+    let runtime_meta = Meta {
         id,
         version,
         num_tests: tests.len() as u32,
@@ -24,20 +24,24 @@ pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) ->
     unsafe {
         EMT_RUNTIME_BLOCK.init();
         loop {
-            if let Err(err) = poll_runtime(&mut EMT_RUNTIME_BLOCK) {
+            if let Err(err) = poll_runtime(&mut EMT_RUNTIME_BLOCK, runtime_meta) {
                 panic!("runtime error: {:?}", err);
             }
         }
     }
 }
 
+/// For testing purposes.
+pub fn inject(event: Event) -> Result<Event, common::runtime::Error> {
+    unsafe { EMT_RUNTIME_BLOCK.request(event) }
+}
+
 #[inline(always)]
-fn poll_runtime(runtime_block: &mut RuntimeBlock) -> Result<(), Error> {
+fn poll_runtime(runtime_block: &mut RuntimeBlock, meta: Meta) -> Result<(), Error> {
     match runtime_block.read()? {
         Event::MetaRequest => {
-            unimplemented!();
-            // let meta_response = Event::Meta;
-            // runtime_block.respond(meta_response)?;
+            let meta_response = Event::Meta(meta);
+            runtime_block.respond(meta_response)?;
         }
         _ => return Err(Error::UnexpectedEvent),
     }
