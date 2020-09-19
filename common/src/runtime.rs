@@ -33,7 +33,7 @@ pub enum Event<'a> {
     Meta(Meta<'a>),
     Test(u32),
     Context(Context<'a>),
-    Output,
+    Output(&'a str),
     Result(test::Result),
 }
 
@@ -45,7 +45,7 @@ impl<'a> Event<'a> {
             Event::Meta(_) => 2,
             Event::Test(_) => 3,
             Event::Context(_) => 4,
-            Event::Output => 5,
+            Event::Output(_) => 5,
             Event::Result(_) => 6,
         }
     }
@@ -69,7 +69,10 @@ impl<'a> Event<'a> {
                 len += encode_u32(context.timeout_ms, &mut into[len..])?;
                 Ok(len)
             }
-            Event::Output => unimplemented!(),
+            Event::Output(message) => {
+                let len = encode_str(message, into)?;
+                Ok(len)
+            }
             Event::Result(result) => {
                 let len = encode_bool(result.did_pass, into)?;
                 Ok(len)
@@ -117,7 +120,10 @@ impl<'a> Event<'a> {
                     timeout_ms,
                 })
             }
-            5 => unimplemented!(),
+            5 => {
+                let (message, _) = decode_str(from)?;
+                Event::Output(message)
+            }
             6 => {
                 let did_pass = decode_bool(from)?;
                 Event::Result(test::Result { did_pass })

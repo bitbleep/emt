@@ -32,10 +32,10 @@ pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) ->
 }
 
 #[inline(always)]
-pub fn output<'a>(_message: &'a str) {
+pub fn output<'a>(message: &'a str) {
     unsafe {
         EMT_RUNTIME_BLOCK
-            .request(Event::Output)
+            .request(Event::Output(message))
             .expect("runtime output failed");
     }
 }
