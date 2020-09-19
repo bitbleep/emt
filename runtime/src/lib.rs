@@ -9,8 +9,8 @@ use runtime_block::RuntimeBlock;
 #[no_mangle]
 static mut EMT_RUNTIME_BLOCK: RuntimeBlock = RuntimeBlock::new();
 
-pub struct Test {
-    pub context: Context,
+pub struct Test<'a> {
+    pub context: Context<'a>,
     pub run: fn(),
 }
 

@@ -12,7 +12,7 @@ const TESTS: [Test; 1] = [Test {
     run: blah,
 }];
 
-pub fn list_tests() -> &'static [Test] {
+pub fn list_tests<'a>() -> &'a [Test<'a>] {
     &TESTS
 }
 
