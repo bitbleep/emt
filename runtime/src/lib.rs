@@ -11,7 +11,7 @@ static mut EMT_RUNTIME_BLOCK: RuntimeBlock = RuntimeBlock::new();
 
 pub struct Test<'a> {
     pub context: Context<'a>,
-    pub run: fn(),
+    pub run: fn() -> bool,
 }
 
 pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) -> ! {
@@ -24,11 +24,28 @@ pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) ->
     unsafe {
         EMT_RUNTIME_BLOCK.init();
         loop {
-            if let Err(err) = poll_runtime(&mut EMT_RUNTIME_BLOCK, runtime_meta) {
+            if let Err(err) = poll_runtime(&mut EMT_RUNTIME_BLOCK, runtime_meta, tests) {
                 panic!("runtime error: {:?}", err);
             }
         }
     }
+}
+
+#[inline(always)]
+pub fn output<'a>(_message: &'a str) {
+    unsafe {
+        EMT_RUNTIME_BLOCK
+            .request(Event::Output)
+            .expect("runtime output failed");
+    }
+}
+
+#[inline(always)]
+pub fn assert_eq<T>(lhs: T, rhs: T) -> bool
+where
+    T: PartialEq,
+{
+    lhs == rhs
 }
 
 /// For testing purposes.
@@ -37,11 +54,25 @@ pub fn inject(event: Event) -> Result<Event, common::runtime::Error> {
 }
 
 #[inline(always)]
-fn poll_runtime(runtime_block: &mut RuntimeBlock, meta: Meta) -> Result<(), Error> {
+fn poll_runtime(runtime_block: &mut RuntimeBlock, meta: Meta, tests: &[Test]) -> Result<(), Error> {
     match runtime_block.read()? {
         Event::MetaRequest => {
             let meta_response = Event::Meta(meta);
             runtime_block.respond(meta_response)?;
+        }
+        Event::Test(id) => {
+            let id = id as usize;
+            if id >= tests.len() {
+                // todo: Result: FAIL
+            }
+            let test = &tests[id];
+            let context_response = Event::Context(test.context);
+            runtime_block.respond(context_response)?;
+            (test.run)();
+            // encode the context and respond
+            // run the test
+            // output the result
+            unimplemented!();
         }
         _ => return Err(Error::UnexpectedEvent),
     }

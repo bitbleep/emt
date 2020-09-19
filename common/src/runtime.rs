@@ -4,6 +4,7 @@ use crate::test::Context;
 pub enum Error {
     BufferOverflow,
     IllegalString,
+    IllegalBool,
     IllegalStatus { actual: Status, expected: Status },
 }
 
@@ -30,7 +31,7 @@ pub enum Event<'a> {
     MetaRequest,
     Meta(Meta<'a>),
     Test(u32),
-    Context,
+    Context(Context<'a>),
     Output,
     Result,
 }
@@ -42,7 +43,7 @@ impl<'a> Event<'a> {
             Event::MetaRequest => 1,
             Event::Meta(_) => 2,
             Event::Test(_) => 3,
-            Event::Context => 4,
+            Event::Context(_) => 4,
             Event::Output => 5,
             Event::Result => 6,
         }
@@ -59,7 +60,14 @@ impl<'a> Event<'a> {
                 Ok(len)
             }
             Event::Test(id) => Ok(encode_u32(id, into)?),
-            Event::Context => unimplemented!(),
+            Event::Context(context) => {
+                let mut len = encode_str(context.name, into)?;
+                len += encode_str(context.description, &mut into[len..])?;
+                len += encode_bool(context.requires_human_interaction, &mut into[len..])?;
+                len += encode_bool(context.should_panic, &mut into[len..])?;
+                len += encode_u32(context.timeout_ms, &mut into[len..])?;
+                Ok(len)
+            }
             Event::Output => unimplemented!(),
             Event::Result => unimplemented!(),
         }
@@ -85,6 +93,25 @@ impl<'a> Event<'a> {
             3 => {
                 let id = decode_u32(from)?;
                 Event::Test(id)
+            }
+            4 => {
+                let mut len = 0_usize;
+                let (name, name_len) = decode_str(from)?;
+                len += name_len;
+                let (description, description_len) = decode_str(&from[len..])?;
+                len += description_len;
+                let requires_human_interaction = decode_bool(&from[len..])?;
+                len += 1;
+                let should_panic = decode_bool(&from[len..])?;
+                len += 1;
+                let timeout_ms = decode_u32(&from[len..])?;
+                Event::Context(Context {
+                    name,
+                    description,
+                    requires_human_interaction,
+                    should_panic,
+                    timeout_ms,
+                })
             }
             _ => unimplemented!(),
         })
@@ -141,5 +168,27 @@ fn decode_str<'a>(from: &'a [u8]) -> Result<(&'a str, usize), Error> {
     match core::str::from_utf8(&from[..len - 1]) {
         Ok(value) => Ok((value, len)),
         Err(_) => Err(Error::IllegalString),
+    }
+}
+
+fn encode_bool(value: bool, into: &mut [u8]) -> Result<usize, Error> {
+    if into.len() < 1 {
+        return Err(Error::BufferOverflow);
+    }
+    into[0] = match value {
+        true => 1,
+        false => 0,
+    };
+    Ok(1)
+}
+
+fn decode_bool(from: &[u8]) -> Result<bool, Error> {
+    if from.len() < 1 {
+        return Err(Error::BufferOverflow);
+    }
+    match from[0] {
+        1 => Ok(true),
+        0 => Ok(false),
+        _ => Err(Error::IllegalBool),
     }
 }

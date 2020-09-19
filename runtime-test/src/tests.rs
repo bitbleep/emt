@@ -16,6 +16,7 @@ pub fn list_tests<'a>() -> &'a [Test<'a>] {
     &TESTS
 }
 
-fn blah() {
-    unimplemented!();
+fn blah() -> bool {
+    runtime::output("hello from blah");
+    runtime::assert_eq(true, true)
 }
