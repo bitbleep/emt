@@ -4,7 +4,7 @@ use common::runtime::{Error, Event, Runtime, Status};
 pub(crate) struct RuntimeBlock {
     magic_sequence: [u8; 12],
     status: Status,
-    event_id: Event,
+    event_id: u32,
     data_size: u32,
     data: [u8; 488],
 }
@@ -14,7 +14,7 @@ impl RuntimeBlock {
         Self {
             magic_sequence: [0u8; 12],
             status: Status::NotReady,
-            event_id: Event::None,
+            event_id: Event::None.id(),
             data_size: 0,
             data: [0u8; 488],
         }
@@ -23,7 +23,7 @@ impl RuntimeBlock {
     pub fn init(&mut self) {
         self.magic_sequence = *b"EMT-RUNTIME ";
         self.status = Status::Idle;
-        self.event_id = Event::None;
+        self.event_id = Event::None.id();
     }
 }
 
@@ -38,26 +38,26 @@ impl Runtime for RuntimeBlock {
 
     fn request(&mut self, event: Event) -> Result<Event, Error> {
         expect_status(self.status, Status::Idle)?;
-        // todo: encode and write to event id, size, data
+        self.event_id = event.id();
+        self.data_size = event.encode(&mut self.data)? as u32;
         self.status = Status::Send;
         while self.status != Status::Receive {}
-        // todo: read and decode event
-        let event = Event::None;
+        let event = Event::decode(self.event_id, &self.data[..self.data_size as usize])?;
         self.status = Status::Idle;
         Ok(event)
     }
 
     fn respond(&mut self, event: Event) -> Result<(), Error> {
         expect_status(self.status, Status::Send)?;
-        // todo: encode and write to event id, size, data
+        self.event_id = event.id();
+        self.data_size = event.encode(&mut self.data)? as u32;
         self.status = Status::Receive;
         Ok(())
     }
 
     fn read(&mut self) -> Result<Event, Error> {
         while self.status != Status::Send {}
-        // todo: read and decode event
-        let event = Event::None;
+        let event = Event::decode(self.event_id, &self.data[..self.data_size as usize])?;
         self.status = Status::Receive;
         Ok(event)
     }

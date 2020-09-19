@@ -1,10 +1,11 @@
 use nb::block;
 use nrf52832_hal::{pac::Peripherals, prelude::*, timer::Timer};
 
+use common::test::Context;
 use runtime::Test;
 
 const TESTS: [Test; 1] = [Test {
-    meta: common::Test {
+    context: Context {
         name: "blah",
         description: "Do some garbage testing",
         requires_human_interaction: false,

@@ -3,13 +3,14 @@
 mod runtime_block;
 
 use common::runtime::{Event, Meta, Runtime};
+use common::test::Context;
 use runtime_block::RuntimeBlock;
 
 #[no_mangle]
 static mut EMT_RUNTIME_BLOCK: RuntimeBlock = RuntimeBlock::new();
 
 pub struct Test {
-    pub meta: common::Test,
+    pub context: Context,
     pub run: fn(),
 }
 
@@ -34,8 +35,9 @@ pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) ->
 fn poll_runtime(runtime_block: &mut RuntimeBlock) -> Result<(), Error> {
     match runtime_block.read()? {
         Event::MetaRequest => {
-            let meta_response = Event::MetaResponse;
-            runtime_block.respond(meta_response)?;
+            unimplemented!();
+            // let meta_response = Event::Meta;
+            // runtime_block.respond(meta_response)?;
         }
         _ => return Err(Error::UnexpectedEvent),
     }

@@ -1,6 +1,6 @@
 use probe_rs::{MemoryInterface, Session};
 
-use common::{/*link, link::Event,*/ runtime::Meta, Test};
+use common::{/*link, link::Event,*/ runtime::Meta, test::Context};
 
 use crate::runner::Error;
 
@@ -34,7 +34,7 @@ impl crate::runner::Runner for Runner {
         unimplemented!();
     }
 
-    fn start(&mut self, _id: u32) -> Result<Test, Error> {
+    fn start(&mut self, _id: u32) -> Result<Context, Error> {
         // let none_event = link::Event::None;
         // self.link.send(none_event)?;
         unimplemented!();

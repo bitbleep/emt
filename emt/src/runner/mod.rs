@@ -1,5 +1,5 @@
 use common::runtime::{self, Meta};
-use common::Test;
+use common::test::Context;
 
 pub mod probe;
 pub mod qemu;
@@ -19,7 +19,7 @@ impl From<runtime::Error> for Error {
 
 pub trait Runner {
     fn meta(&mut self) -> Meta;
-    fn start(&mut self, id: u32) -> Result<Test, Error>;
+    fn start(&mut self, id: u32) -> Result<Context, Error>;
 }
 
 /// "EMT-RUNTIME "
