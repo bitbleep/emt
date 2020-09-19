@@ -1,8 +1,8 @@
 use common::runtime::{self, Meta};
 use common::test::Context;
 
+pub mod in_memory;
 pub mod probe;
-pub mod qemu;
 
 #[derive(Debug, Copy, Clone)]
 pub enum Error {
