@@ -1,8 +1,9 @@
-use crate::test::Context;
+use crate::test::{self, Context};
 
 #[derive(Debug, Copy, Clone)]
 pub enum Error {
     BufferOverflow,
+    IllegalEventId,
     IllegalString,
     IllegalBool,
     IllegalStatus { actual: Status, expected: Status },
@@ -33,7 +34,7 @@ pub enum Event<'a> {
     Test(u32),
     Context(Context<'a>),
     Output,
-    Result,
+    Result(test::Result),
 }
 
 impl<'a> Event<'a> {
@@ -45,7 +46,7 @@ impl<'a> Event<'a> {
             Event::Test(_) => 3,
             Event::Context(_) => 4,
             Event::Output => 5,
-            Event::Result => 6,
+            Event::Result(_) => 6,
         }
     }
 
@@ -69,7 +70,10 @@ impl<'a> Event<'a> {
                 Ok(len)
             }
             Event::Output => unimplemented!(),
-            Event::Result => unimplemented!(),
+            Event::Result(result) => {
+                let len = encode_bool(result.did_pass, into)?;
+                Ok(len)
+            }
         }
     }
 
@@ -113,7 +117,12 @@ impl<'a> Event<'a> {
                     timeout_ms,
                 })
             }
-            _ => unimplemented!(),
+            5 => unimplemented!(),
+            6 => {
+                let did_pass = decode_bool(from)?;
+                Event::Result(test::Result { did_pass })
+            }
+            _ => return Err(Error::IllegalEventId),
         })
     }
 }
