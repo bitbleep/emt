@@ -1,5 +1,7 @@
 #[derive(Debug, Copy, Clone)]
-pub enum Error {}
+pub enum Error {
+    IllegalStatus { actual: Status, expected: Status },
+}
 
 pub struct Meta {
     pub id: &'static str,
@@ -8,6 +10,7 @@ pub struct Meta {
 }
 
 // todo: this should be a safer setup of TryFrom/Into etc.
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 #[repr(u32)]
 pub enum Status {
     NotReady = 0,
@@ -17,10 +20,12 @@ pub enum Status {
 }
 
 // todo: this should be a safer setup of TryFrom/Into etc.
+#[derive(Debug, Copy, Clone)]
 #[repr(u32)]
 pub enum Event {
     None = 0,
-    Meta,
+    MetaRequest,
+    MetaResponse,
     Test,
 }
 
