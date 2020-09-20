@@ -3,6 +3,7 @@ use crate::test::{self, Context};
 #[derive(Debug, Copy, Clone)]
 pub enum Error {
     BufferOverflow,
+    UnexpectedEvent,
     IllegalEventId,
     IllegalString,
     IllegalBool,
@@ -24,6 +25,28 @@ pub enum Status {
     Idle,
     Send,
     Receive,
+}
+
+// todo: haxxx, do it properly
+impl Status {
+    pub fn from_u32(value: u32) -> Status {
+        match value {
+            0 => Status::NotReady,
+            1 => Status::Idle,
+            2 => Status::Send,
+            3 => Status::Receive,
+            _ => panic!("fudge"),
+        }
+    }
+
+    pub fn to_u32(&self) -> u32 {
+        match *self {
+            Status::NotReady => 0,
+            Status::Idle => 1,
+            Status::Send => 2,
+            Status::Receive => 3,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -134,12 +157,12 @@ impl<'a> Event<'a> {
 }
 
 pub trait Runtime {
-    fn status(&self) -> Status;
+    fn status(&mut self) -> Status;
     fn set_status(&mut self, status: Status);
     fn encode_event(&mut self, event: Event) -> Result<(), Error>;
     fn decode_event(&mut self) -> Result<Event, Error>;
 
-    fn await_status(&self, status: Status) {
+    fn await_status(&mut self, status: Status) {
         while self.status() != status {}
     }
 
@@ -169,7 +192,7 @@ pub trait Runtime {
     }
 }
 
-fn encode_u32(value: u32, into: &mut [u8]) -> Result<usize, Error> {
+pub fn encode_u32(value: u32, into: &mut [u8]) -> Result<usize, Error> {
     if into.len() < 4 {
         return Err(Error::BufferOverflow);
     }
@@ -180,14 +203,14 @@ fn encode_u32(value: u32, into: &mut [u8]) -> Result<usize, Error> {
     Ok(4)
 }
 
-fn decode_u32(from: &[u8]) -> Result<u32, Error> {
+pub fn decode_u32(from: &[u8]) -> Result<u32, Error> {
     if from.len() < 4 {
         return Err(Error::BufferOverflow);
     }
     Ok(from[0] as u32 | (from[1] as u32) << 8 | (from[2] as u32) << 16 | (from[3] as u32) << 24)
 }
 
-fn encode_str(value: &str, into: &mut [u8]) -> Result<usize, Error> {
+pub fn encode_str(value: &str, into: &mut [u8]) -> Result<usize, Error> {
     let len = value.as_bytes().len();
     if into.len() < len + 1 {
         return Err(Error::BufferOverflow);
@@ -197,7 +220,7 @@ fn encode_str(value: &str, into: &mut [u8]) -> Result<usize, Error> {
     Ok(len + 1)
 }
 
-fn decode_str<'a>(from: &'a [u8]) -> Result<(&'a str, usize), Error> {
+pub fn decode_str<'a>(from: &'a [u8]) -> Result<(&'a str, usize), Error> {
     let mut len = 0_usize;
     for index in 0..from.len() {
         if from[index] == 0 {

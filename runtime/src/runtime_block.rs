@@ -28,7 +28,7 @@ impl RuntimeBlock {
 }
 
 impl Runtime for RuntimeBlock {
-    fn status(&self) -> Status {
+    fn status(&mut self) -> Status {
         self.status
     }
 
