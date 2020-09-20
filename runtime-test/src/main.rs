@@ -25,6 +25,7 @@ fn main() {
             }
             _ => panic!("unexpected event"),
         };
+    runtime::complete_request();
 
     for id in 0..num_tests {
         println!("injecting: test {}", id);
@@ -32,6 +33,8 @@ fn main() {
             Event::Context(context) => eprintln!("{}: {}", context.name, context.description),
             _ => panic!("unexpected event"),
         }
+        runtime::complete_request();
+
         let mut done = false;
         loop {
             match runtime::read().expect("failed to read from runtime") {

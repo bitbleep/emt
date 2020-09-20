@@ -37,6 +37,7 @@ pub fn output<'a>(message: &'a str) {
         EMT_RUNTIME_BLOCK
             .request(Event::Output(message))
             .expect("runtime output failed");
+        EMT_RUNTIME_BLOCK.complete_request();
     }
 }
 
@@ -63,6 +64,11 @@ pub fn respond(event: Event) -> Result<(), common::runtime::Error> {
     unsafe { EMT_RUNTIME_BLOCK.respond(event) }
 }
 
+/// For testing purposes.
+pub fn complete_request() {
+    unsafe { EMT_RUNTIME_BLOCK.complete_request() }
+}
+
 #[inline(always)]
 fn poll_runtime(runtime_block: &mut RuntimeBlock, meta: Meta, tests: &[Test]) -> Result<(), Error> {
     match runtime_block.read()? {
@@ -79,6 +85,7 @@ fn poll_runtime(runtime_block: &mut RuntimeBlock, meta: Meta, tests: &[Test]) ->
                 let did_pass = (test.run)();
                 let result_response = Event::Result(test::Result { did_pass });
                 runtime_block.request(result_response)?;
+                runtime_block.complete_request();
             } else {
                 // todo: should use a separate status for this
                 let result_response = Event::Result(test::Result { did_pass: false });

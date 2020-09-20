@@ -136,9 +136,37 @@ impl<'a> Event<'a> {
 pub trait Runtime {
     fn status(&self) -> Status;
     fn set_status(&mut self, status: Status);
-    fn request(&mut self, event: Event) -> Result<Event, Error>;
-    fn respond(&mut self, event: Event) -> Result<(), Error>;
-    fn read(&mut self) -> Result<Event, Error>;
+    fn encode_event(&mut self, event: Event) -> Result<(), Error>;
+    fn decode_event(&mut self) -> Result<Event, Error>;
+
+    fn await_status(&self, status: Status) {
+        while self.status() != status {}
+    }
+
+    fn request(&mut self, event: Event) -> Result<Event, Error> {
+        self.await_status(Status::Idle);
+        self.encode_event(event)?;
+        self.set_status(Status::Send);
+        self.await_status(Status::Receive);
+        let event = self.decode_event()?;
+        Ok(event)
+    }
+
+    fn complete_request(&mut self) {
+        self.set_status(Status::Idle);
+    }
+
+    fn respond(&mut self, event: Event) -> Result<(), Error> {
+        self.await_status(Status::Send);
+        self.encode_event(event)?;
+        self.set_status(Status::Receive);
+        Ok(())
+    }
+
+    fn read(&mut self) -> Result<Event, Error> {
+        self.await_status(Status::Send);
+        self.decode_event()
+    }
 }
 
 fn encode_u32(value: u32, into: &mut [u8]) -> Result<usize, Error> {

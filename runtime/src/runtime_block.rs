@@ -25,10 +25,6 @@ impl RuntimeBlock {
         self.status = Status::Idle;
         self.event_id = Event::None.id();
     }
-
-    fn await_status(&mut self, status: Status) {
-        while self.status != status {}
-    }
 }
 
 impl Runtime for RuntimeBlock {
@@ -40,28 +36,13 @@ impl Runtime for RuntimeBlock {
         self.status = status;
     }
 
-    fn request(&mut self, event: Event) -> Result<Event, Error> {
-        self.await_status(Status::Idle);
+    fn encode_event(&mut self, event: Event) -> Result<(), Error> {
         self.event_id = event.id();
         self.data_size = event.encode(&mut self.data)? as u32;
-        self.status = Status::Send;
-        while self.status != Status::Receive {}
-        let event = Event::decode(self.event_id, &self.data[..self.data_size as usize])?;
-        self.status = Status::Idle;
-        Ok(event)
-    }
-
-    fn respond(&mut self, event: Event) -> Result<(), Error> {
-        self.await_status(Status::Send);
-        self.event_id = event.id();
-        self.data_size = event.encode(&mut self.data)? as u32;
-        self.status = Status::Receive;
         Ok(())
     }
 
-    fn read(&mut self) -> Result<Event, Error> {
-        self.await_status(Status::Send);
-        let event = Event::decode(self.event_id, &self.data[..self.data_size as usize])?;
-        Ok(event)
+    fn decode_event(&mut self) -> Result<Event, Error> {
+        Event::decode(self.event_id, &self.data[..self.data_size as usize])
     }
 }
