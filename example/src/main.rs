@@ -6,7 +6,7 @@ mod tests;
 use common::test::Context;
 use runtime::Test;
 
-const TESTS: [Test; 5] = [
+const TESTS: [Test; 6] = [
     Test {
         context: Context {
             name: "always_pass",
@@ -30,9 +30,19 @@ const TESTS: [Test; 5] = [
     Test {
         context: Context {
             name: "always_panic",
-            description: "A test that always panics",
+            description: "A test that always panics, but that's ok",
             requires_human_interaction: false,
             should_panic: true,
+            timeout_ms: 500,
+        },
+        run: tests::always_panic,
+    },
+    Test {
+        context: Context {
+            name: "always_panic",
+            description: "A test that always panics, and it's not ok",
+            requires_human_interaction: false,
+            should_panic: false,
             timeout_ms: 500,
         },
         run: tests::always_panic,
@@ -51,7 +61,7 @@ const TESTS: [Test; 5] = [
         context: Context {
             name: "button_wait",
             description: "Wait for the user to push button 1 on the devkit",
-            requires_human_interaction: false,
+            requires_human_interaction: true,
             should_panic: false,
             timeout_ms: 30000,
         },
