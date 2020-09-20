@@ -5,13 +5,73 @@ mod tests;
 
 extern crate panic_rtt;
 
-// use nrf52832_hal::{gpio::Level, pac::Peripherals, prelude::*, timer::Timer};
-use tests::list_tests;
+use common::test::Context;
+use runtime::Test;
+
+const TESTS: [Test; 6] = [
+    Test {
+        context: Context {
+            name: "always_pass",
+            description: "A test that always passes",
+            requires_human_interaction: false,
+            should_panic: false,
+            timeout_ms: 500,
+        },
+        run: tests::always_pass,
+    },
+    Test {
+        context: Context {
+            name: "always_fail",
+            description: "A test that always fails",
+            requires_human_interaction: false,
+            should_panic: false,
+            timeout_ms: 500,
+        },
+        run: tests::always_fail,
+    },
+    Test {
+        context: Context {
+            name: "always_fail",
+            description: "A test that always fails",
+            requires_human_interaction: false,
+            should_panic: false,
+            timeout_ms: 500,
+        },
+        run: tests::always_pass,
+    },
+    Test {
+        context: Context {
+            name: "timer_wait",
+            description: "Start a timer and wait for it to finish",
+            requires_human_interaction: false,
+            should_panic: false,
+            timeout_ms: 500,
+        },
+        run: tests::timer_wait,
+    },
+    Test {
+        context: Context {
+            name: "button_wait",
+            description: "Wait for the user to push button 1 on the devkit",
+            requires_human_interaction: false,
+            should_panic: false,
+            timeout_ms: 30000,
+        },
+        run: tests::button_wait,
+    },
+    Test {
+        context: Context {
+            name: "always_panic",
+            description: "A test that always panics",
+            requires_human_interaction: false,
+            should_panic: true,
+            timeout_ms: 500,
+        },
+        run: tests::always_panic,
+    },
+];
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
-    // let board_peripherals = Peripherals::take().unwrap();
-    // let p0 = nrf52832_hal::gpio::p0::Parts::new(board_peripherals.P0);
-    // let _ = p0.p0_17.into_push_pull_output(Level::Low).degrade();
-    runtime::start("emt example tests", "1.0.0", list_tests());
+    runtime::start("emt example tests", "1.0.0", &TESTS);
 }
