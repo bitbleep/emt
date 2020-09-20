@@ -41,6 +41,9 @@ impl crate::runner::Runner for Runner {
     }
 
     fn start(&mut self, id: u32) -> Result<(), Error> {
+        // reset board before every test
+        self.link.reset();
+
         println!("injecting: test {}", id);
         match self
             .link
@@ -96,6 +99,14 @@ impl Link {
             session,
             io_buf: [0u8; 512],
         }
+    }
+
+    fn reset(&mut self) {
+        self.session
+            .core(0)
+            .expect("failed to get core")
+            .reset()
+            .expect("failed to reset");
     }
 }
 
