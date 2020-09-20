@@ -26,5 +26,5 @@ pub struct RuntimeMeta {
 
 pub trait Runner {
     fn meta(&mut self) -> &RuntimeMeta;
-    fn start(&mut self, id: u32) -> Result<Context, Error>;
+    fn start(&mut self, id: u32) -> Result<(), Error>;
 }
