@@ -17,7 +17,7 @@ impl Runner {
         let mut session = Session::auto_attach("nrf52").map_err(|_err| Error::AttachFailed)?;
         eprintln!("auto attached nrf52");
 
-        let base_address = detect_runtime(&mut session, 0x2000_0000, 0x10000)? + 1; // todo: the +1 is a bug
+        let base_address = detect_runtime(&mut session, 0x2000_0000, 0x10000)?;
         eprintln!("found base address: 0x{:08x}", base_address);
 
         let mut link = Link::new(base_address, session);
@@ -198,7 +198,7 @@ fn detect_runtime(session: &mut Session, base_address: u32, size: u32) -> Result
                 _ => 0,
             };
             if offset == MAGIC_SEQUENCE.len() {
-                return Ok(address + index as u32 - MAGIC_SEQUENCE.len() as u32);
+                return Ok(address + index as u32 - MAGIC_SEQUENCE.len() as u32 + 1);
             }
         }
         address += len as u32;
