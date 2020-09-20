@@ -13,6 +13,16 @@ use common::runtime::{Event, Meta, Runtime};
 use common::test::{self, Context};
 use runtime_block::RuntimeBlock;
 
+/// Syntactic sugar for your test assertions.
+#[macro_export]
+macro_rules! emt_assert_eq {
+    ($lhs:expr, $rhs:expr) => {
+        if $lhs != $rhs {
+            return false;
+        }
+    };
+}
+
 #[no_mangle]
 static mut EMT_RUNTIME_BLOCK: RuntimeBlock = RuntimeBlock::new();
 static mut EMT_TEST_STATE: TestState = TestState {

@@ -4,7 +4,7 @@
 mod tests;
 
 use common::test::Context;
-use runtime::Test;
+use runtime::*;
 
 const TESTS: [Test; 6] = [
     Test {

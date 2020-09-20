@@ -1,12 +1,14 @@
 use nb::block;
 use nrf52832_hal::{pac::Peripherals, prelude::*, timer::Timer};
 
+use runtime::*;
+
 pub fn always_pass() -> bool {
-    runtime::assert_eq(true, true)
+    true
 }
 
 pub fn always_fail() -> bool {
-    runtime::assert_eq(true, false)
+    false
 }
 
 pub fn always_panic() -> bool {
