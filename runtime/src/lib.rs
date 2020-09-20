@@ -2,16 +2,43 @@
 
 mod runtime_block;
 
+use core::{
+    panic::PanicInfo,
+    sync::atomic::{self, Ordering},
+};
+
+use cortex_m::interrupt;
+
 use common::runtime::{Event, Meta, Runtime};
 use common::test::{self, Context};
 use runtime_block::RuntimeBlock;
 
 #[no_mangle]
 static mut EMT_RUNTIME_BLOCK: RuntimeBlock = RuntimeBlock::new();
+static mut EMT_TEST_STATE: TestState = TestState {
+    is_running: false,
+    should_panic: false,
+};
 
 pub struct Test<'a> {
     pub context: Context<'a>,
     pub run: fn() -> bool,
+}
+
+struct TestState {
+    is_running: bool,
+    should_panic: bool,
+}
+
+impl TestState {
+    fn begin(&mut self, should_panic: bool) {
+        self.is_running = true;
+        self.should_panic = should_panic;
+    }
+
+    fn end(&mut self) {
+        self.is_running = false;
+    }
 }
 
 pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) -> ! {
@@ -49,6 +76,28 @@ where
     lhs == rhs
 }
 
+#[inline(never)]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    interrupt::disable();
+
+    unsafe {
+        if EMT_TEST_STATE.is_running {
+            let did_pass = EMT_TEST_STATE.should_panic;
+            let result_response = Event::Result(test::Result { did_pass });
+            EMT_RUNTIME_BLOCK.request(result_response);
+            EMT_RUNTIME_BLOCK.complete_request();
+            unsafe {
+                EMT_TEST_STATE.end();
+            }
+        }
+    }
+
+    loop {
+        atomic::compiler_fence(Ordering::SeqCst);
+    }
+}
+
 #[inline(always)]
 fn poll_runtime(runtime_block: &mut RuntimeBlock, meta: Meta, tests: &[Test]) -> Result<(), Error> {
     match runtime_block.read()? {
@@ -60,12 +109,18 @@ fn poll_runtime(runtime_block: &mut RuntimeBlock, meta: Meta, tests: &[Test]) ->
             let id = id as usize;
             if id < tests.len() {
                 let test = &tests[id];
+                unsafe {
+                    EMT_TEST_STATE.begin(test.context.should_panic);
+                }
                 let context_response = Event::Context(test.context);
                 runtime_block.respond(context_response)?;
                 let did_pass = (test.run)();
                 let result_response = Event::Result(test::Result { did_pass });
                 runtime_block.request(result_response)?;
                 runtime_block.complete_request();
+                unsafe {
+                    EMT_TEST_STATE.end();
+                }
             } else {
                 // todo: should use a separate status for this
                 let result_response = Event::Result(test::Result { did_pass: false });

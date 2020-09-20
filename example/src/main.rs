@@ -3,12 +3,10 @@
 
 mod tests;
 
-extern crate panic_rtt;
-
 use common::test::Context;
 use runtime::Test;
 
-const TESTS: [Test; 6] = [
+const TESTS: [Test; 5] = [
     Test {
         context: Context {
             name: "always_pass",
@@ -31,13 +29,13 @@ const TESTS: [Test; 6] = [
     },
     Test {
         context: Context {
-            name: "always_fail",
-            description: "A test that always fails",
+            name: "always_panic",
+            description: "A test that always panics",
             requires_human_interaction: false,
-            should_panic: false,
+            should_panic: true,
             timeout_ms: 500,
         },
-        run: tests::always_pass,
+        run: tests::always_panic,
     },
     Test {
         context: Context {
@@ -58,16 +56,6 @@ const TESTS: [Test; 6] = [
             timeout_ms: 30000,
         },
         run: tests::button_wait,
-    },
-    Test {
-        context: Context {
-            name: "always_panic",
-            description: "A test that always panics",
-            requires_human_interaction: false,
-            should_panic: true,
-            timeout_ms: 500,
-        },
-        run: tests::always_panic,
     },
 ];
 

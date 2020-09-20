@@ -2,12 +2,6 @@
 # It is not intended for manual editing.
 [[package]]
 name = "aligned"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d39da9b88ae1a81c03c9c082b8db83f1d0e93914126041962af61034ab44c4a5"
-
-[[package]]
-name = "aligned"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c19796bd8d477f1a9d4ac2465b464a8b1359474f06a96bb3cda650b4fca309bf"
@@ -62,23 +56,11 @@ version = "0.1.0"
 
 [[package]]
 name = "cortex-m"
-version = "0.5.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c0b159a1e8306949579de3698c841dba58058197b65c60807194e4fa1e7a554"
-dependencies = [
- "aligned 0.2.0",
- "bare-metal",
- "cortex-m 0.6.3",
- "volatile-register",
-]
-
-[[package]]
-name = "cortex-m"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2be99930c99669a74d986f7fd2162085498b322e6daae8ef63a97cc9ac1dc73c"
 dependencies = [
- "aligned 0.3.4",
+ "aligned",
  "bare-metal",
  "bitfield",
  "volatile-register",
@@ -120,12 +102,11 @@ name = "example"
 version = "0.1.0"
 dependencies = [
  "common",
- "cortex-m 0.6.3",
+ "cortex-m",
  "cortex-m-rt",
  "embedded-hal",
  "nb 0.1.3",
  "nrf52832-hal",
- "panic_rtt",
  "runtime",
 ]
 
@@ -157,12 +138,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "jlink_rtt"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "699071e1a2c6386a6b49582ddbb329a20965a85b7ab71ab484eaa02123e807f1"
-
-[[package]]
 name = "nb"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -185,7 +160,7 @@ checksum = "299e8e5b67542ae134c93722f03f3137d349b3786a35dd2b02a87701ea779201"
 dependencies = [
  "cast",
  "cfg-if",
- "cortex-m 0.6.3",
+ "cortex-m",
  "embedded-hal",
  "fixed",
  "nb 1.0.0",
@@ -212,19 +187,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72920484274fae0792a40345049da2723612465c7202561b6a17ad3c127259db"
 dependencies = [
  "bare-metal",
- "cortex-m 0.6.3",
+ "cortex-m",
  "cortex-m-rt",
  "vcell",
-]
-
-[[package]]
-name = "panic_rtt"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff15e84a05491e43119b628b40726d7e06fdf1d0ab60a777bd3a49f36cd1dfaf"
-dependencies = [
- "cortex-m 0.5.10",
- "jlink_rtt",
 ]
 
 [[package]]
@@ -262,6 +227,7 @@ name = "runtime"
 version = "0.1.0"
 dependencies = [
  "common",
+ "cortex-m",
 ]
 
 [[package]]
