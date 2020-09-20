@@ -49,26 +49,6 @@ where
     lhs == rhs
 }
 
-/// For testing purposes.
-pub fn inject(event: Event) -> Result<Event, common::runtime::Error> {
-    unsafe { EMT_RUNTIME_BLOCK.request(event) }
-}
-
-/// For testing purposes.
-pub fn read() -> Result<Event<'static>, common::runtime::Error> {
-    unsafe { EMT_RUNTIME_BLOCK.read() }
-}
-
-/// For testing purposes.
-pub fn respond(event: Event) -> Result<(), common::runtime::Error> {
-    unsafe { EMT_RUNTIME_BLOCK.respond(event) }
-}
-
-/// For testing purposes.
-pub fn complete_request() {
-    unsafe { EMT_RUNTIME_BLOCK.complete_request() }
-}
-
 #[inline(always)]
 fn poll_runtime(runtime_block: &mut RuntimeBlock, meta: Meta, tests: &[Test]) -> Result<(), Error> {
     match runtime_block.read()? {

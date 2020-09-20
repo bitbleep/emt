@@ -353,14 +353,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "runtime-test"
-version = "0.1.0"
-dependencies = [
- "common 0.1.0",
- "runtime 0.1.0",
-]
-
-[[package]]
 name = "rusb"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
