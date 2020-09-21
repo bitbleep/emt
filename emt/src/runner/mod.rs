@@ -31,6 +31,13 @@ pub struct TestContext {
     pub timeout_ms: u32,
 }
 
+#[derive(Debug, Clone)]
+pub struct TestReport {
+    pub passed: usize,
+    pub failed: usize,
+    pub skipped: usize,
+}
+
 pub trait Runner {
     fn meta(&mut self) -> &RuntimeMeta;
     fn start(&mut self, id: u32) -> Result<(), Error>;
