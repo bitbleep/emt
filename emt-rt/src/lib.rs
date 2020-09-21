@@ -9,8 +9,9 @@ use core::{
 
 use cortex_m::interrupt;
 
-use common::runtime::{Event, Meta, Runtime};
-use common::test::{self, Context};
+pub use common::runtime::{Event, Meta, Runtime};
+pub use common::test::{self, Context};
+
 use runtime_block::RuntimeBlock;
 
 /// Syntactic sugar for your test assertions.

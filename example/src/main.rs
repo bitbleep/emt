@@ -3,8 +3,7 @@
 
 mod tests;
 
-use common::test::Context;
-use runtime::*;
+use emt_rt::*;
 
 const TESTS: [Test; 6] = [
     Test {
@@ -71,5 +70,5 @@ const TESTS: [Test; 6] = [
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
-    runtime::start("emt example tests", "1.0.0", &TESTS);
+    emt_rt::start("emt example tests", "1.0.0", &TESTS);
 }
