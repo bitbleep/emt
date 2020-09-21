@@ -19,7 +19,7 @@ use runtime_block::RuntimeBlock;
 macro_rules! emt_assert_eq {
     ($lhs:expr, $rhs:expr) => {
         if $lhs != $rhs {
-            return false;
+            emt_rt::fail_test();
         }
     };
 }
@@ -33,7 +33,7 @@ static mut EMT_TEST_STATE: TestState = TestState {
 
 pub struct Test<'a> {
     pub context: Context<'a>,
-    pub run: fn() -> bool,
+    pub run: fn(),
 }
 
 struct TestState {
@@ -70,21 +70,25 @@ pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) ->
 }
 
 #[inline(always)]
+pub fn fail_test() {
+    unsafe {
+        EMT_RUNTIME_BLOCK
+            .request(Event::Result(test::Result { did_pass: false }))
+            .expect("runtime request failed");
+        EMT_RUNTIME_BLOCK.complete_request();
+        EMT_TEST_STATE.end();
+    }
+    panic!("fail_test");
+}
+
+#[inline(always)]
 pub fn output<'a>(message: &'a str) {
     unsafe {
         EMT_RUNTIME_BLOCK
             .request(Event::Output(message))
-            .expect("runtime output failed");
+            .expect("runtime request failed");
         EMT_RUNTIME_BLOCK.complete_request();
     }
-}
-
-#[inline(always)]
-pub fn assert_eq<T>(lhs: T, rhs: T) -> bool
-where
-    T: PartialEq,
-{
-    lhs == rhs
 }
 
 #[inline(never)]
@@ -96,11 +100,9 @@ fn panic(info: &PanicInfo) -> ! {
         if EMT_TEST_STATE.is_running {
             let did_pass = EMT_TEST_STATE.should_panic;
             let result_response = Event::Result(test::Result { did_pass });
-            EMT_RUNTIME_BLOCK.request(result_response);
+            EMT_RUNTIME_BLOCK.request(result_response).ok();
             EMT_RUNTIME_BLOCK.complete_request();
-            unsafe {
-                EMT_TEST_STATE.end();
-            }
+            EMT_TEST_STATE.end();
         }
     }
 
@@ -125,8 +127,8 @@ fn poll_runtime(runtime_block: &mut RuntimeBlock, meta: Meta, tests: &[Test]) ->
                 }
                 let context_response = Event::Context(test.context);
                 runtime_block.respond(context_response)?;
-                let did_pass = (test.run)();
-                let result_response = Event::Result(test::Result { did_pass });
+                (test.run)();
+                let result_response = Event::Result(test::Result { did_pass: true });
                 runtime_block.request(result_response)?;
                 runtime_block.complete_request();
                 unsafe {
