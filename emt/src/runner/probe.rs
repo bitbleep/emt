@@ -1,9 +1,6 @@
 use probe_rs::{MemoryInterface, Session};
 
-use common::{
-    runtime::{self, decode_u32, encode_u32, Event, Runtime, Status},
-    test::Context,
-};
+use common::runtime::{self, decode_u32, encode_u32, Event, Runtime, Status};
 
 use crate::runner::{Error, RuntimeMeta};
 

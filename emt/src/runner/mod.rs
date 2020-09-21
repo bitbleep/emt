@@ -1,5 +1,4 @@
 use common::runtime;
-use common::test::Context;
 
 pub mod probe;
 
@@ -21,6 +20,15 @@ pub struct RuntimeMeta {
     pub id: String,
     pub version: String,
     pub num_tests: u32,
+}
+
+#[derive(Debug, Clone)]
+pub struct TestContext {
+    pub name: String,
+    pub description: String,
+    pub requires_human_interaction: bool,
+    pub should_panic: bool,
+    pub timeout_ms: u32,
 }
 
 pub trait Runner {
