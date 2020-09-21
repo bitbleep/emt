@@ -38,7 +38,41 @@ pub struct TestReport {
     pub skipped: usize,
 }
 
+impl TestReport {
+    pub fn new() -> Self {
+        Self {
+            passed: 0,
+            failed: 0,
+            skipped: 0,
+        }
+    }
+
+    pub fn passed(&self) -> usize {
+        self.passed
+    }
+
+    pub fn failed(&self) -> usize {
+        self.failed
+    }
+
+    pub fn skipped(&self) -> usize {
+        self.skipped
+    }
+
+    pub fn append_skipped(&mut self) {
+        self.skipped += 1;
+    }
+
+    pub fn append_result(&mut self, result: common::test::Result) {
+        if result.did_pass() {
+            self.passed += 1;
+        } else {
+            self.failed += 1;
+        }
+    }
+}
+
 pub trait Runner {
     fn meta(&mut self) -> &RuntimeMeta;
-    fn start(&mut self, id: u32) -> Result<(), Error>;
+    fn run(&mut self, id: u32) -> Result<common::test::Result, Error>;
 }

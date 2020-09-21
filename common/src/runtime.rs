@@ -97,7 +97,7 @@ impl<'a> Event<'a> {
                 Ok(len)
             }
             Event::Result(result) => {
-                let len = encode_bool(result.did_pass, into)?;
+                let len = encode_u32(result.into(), into)?;
                 Ok(len)
             }
         }
@@ -147,10 +147,7 @@ impl<'a> Event<'a> {
                 let (message, _) = decode_str(from)?;
                 Event::Output(message)
             }
-            6 => {
-                let did_pass = decode_bool(from)?;
-                Event::Result(test::Result { did_pass })
-            }
+            6 => Event::Result(test::Result::from(decode_u32(from)?)),
             _ => return Err(Error::IllegalEventId),
         })
     }

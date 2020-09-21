@@ -7,7 +7,44 @@ pub struct Context<'a> {
     pub timeout_ms: u32,
 }
 
-#[derive(Debug, Copy, Clone)]
-pub struct Result {
-    pub did_pass: bool,
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum Result {
+    Pass,
+    NotFound,
+    AssertionFail,
+    Panic,
+}
+
+impl Result {
+    pub fn did_pass(&self) -> bool {
+        *self == Result::Pass
+    }
+
+    pub fn did_fail(&self) -> bool {
+        !self.did_pass()
+    }
+}
+
+impl core::convert::From<u32> for Result {
+    fn from(value: u32) -> Self {
+        match value {
+            0 => Result::Pass,
+            1 => Result::NotFound,
+            2 => Result::AssertionFail,
+            3 => Result::Panic,
+            _ => panic!("failed to convert from Result into u32"),
+        }
+    }
+}
+
+impl core::convert::Into<u32> for Result {
+    fn into(self) -> u32 {
+        match self {
+            Result::Pass => 0,
+            Result::NotFound => 1,
+            Result::AssertionFail => 2,
+            Result::Panic => 3,
+            _ => panic!("failed to convert into Result from u32"),
+        }
+    }
 }

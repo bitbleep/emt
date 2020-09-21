@@ -73,7 +73,7 @@ pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) ->
 pub fn fail_test() {
     unsafe {
         EMT_RUNTIME_BLOCK
-            .request(Event::Result(test::Result { did_pass: false }))
+            .request(Event::Result(test::Result::AssertionFail))
             .expect("runtime request failed");
         EMT_RUNTIME_BLOCK.complete_request();
         EMT_TEST_STATE.end();
@@ -98,8 +98,11 @@ fn panic(info: &PanicInfo) -> ! {
 
     unsafe {
         if EMT_TEST_STATE.is_running {
-            let did_pass = EMT_TEST_STATE.should_panic;
-            let result_response = Event::Result(test::Result { did_pass });
+            let result = match EMT_TEST_STATE.should_panic {
+                true => test::Result::Pass,
+                false => test::Result::Panic,
+            };
+            let result_response = Event::Result(result);
             EMT_RUNTIME_BLOCK.request(result_response).ok();
             EMT_RUNTIME_BLOCK.complete_request();
             EMT_TEST_STATE.end();
@@ -128,15 +131,14 @@ fn poll_runtime(runtime_block: &mut RuntimeBlock, meta: Meta, tests: &[Test]) ->
                 let context_response = Event::Context(test.context);
                 runtime_block.respond(context_response)?;
                 (test.run)();
-                let result_response = Event::Result(test::Result { did_pass: true });
+                let result_response = Event::Result(test::Result::Pass);
                 runtime_block.request(result_response)?;
                 runtime_block.complete_request();
                 unsafe {
                     EMT_TEST_STATE.end();
                 }
             } else {
-                // todo: should use a separate status for this
-                let result_response = Event::Result(test::Result { did_pass: false });
+                let result_response = Event::Result(test::Result::NotFound);
                 runtime_block.request(result_response)?;
             }
         }

@@ -37,7 +37,7 @@ impl crate::runner::Runner for Runner {
         &self.meta
     }
 
-    fn start(&mut self, id: u32) -> Result<(), Error> {
+    fn run(&mut self, id: u32) -> Result<common::test::Result, Error> {
         // reset board before every test
         self.link.reset();
 
@@ -52,29 +52,32 @@ impl crate::runner::Runner for Runner {
         }
         self.link.complete_request();
 
-        let mut done = false;
         loop {
-            match self.link.read().expect("failed to read from runtime") {
-                Event::Output(message) => eprintln!("{}", message),
+            let result = match self.link.read().expect("failed to read from runtime") {
+                Event::Output(message) => {
+                    eprintln!("{}", message);
+                    None
+                }
                 Event::Result(result) => {
-                    match result.did_pass {
+                    match result.did_pass() {
                         true => eprintln!("PASS"),
-                        false => eprintln!("FAIL"),
+                        false => eprintln!("FAIL ({:?})", result),
                     }
-                    done = true;
+                    Some(result)
                 }
                 _ => panic!("unexpected event"),
-            }
+            };
+
             self.link
                 .respond(Event::None)
                 .expect("failed to respond to runtime");
-            if done {
-                break;
+
+            if let Some(result) = result {
+                return Ok(result);
             }
         }
-        // todo: timeout
 
-        Ok(())
+        // todo: timeout
     }
 }
 
