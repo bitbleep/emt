@@ -1,7 +1,6 @@
 use common::runtime;
 use common::test::Context;
 
-pub mod in_memory;
 pub mod probe;
 
 #[derive(Debug, Copy, Clone)]
