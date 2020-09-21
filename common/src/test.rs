@@ -13,6 +13,7 @@ pub enum Result {
     NotFound,
     AssertionFail,
     Panic,
+    Timeout,
 }
 
 impl Result {
@@ -32,6 +33,7 @@ impl core::convert::From<u32> for Result {
             1 => Result::NotFound,
             2 => Result::AssertionFail,
             3 => Result::Panic,
+            4 => Result::Timeout,
             _ => panic!("failed to convert from Result into u32"),
         }
     }
@@ -44,7 +46,7 @@ impl core::convert::Into<u32> for Result {
             Result::NotFound => 1,
             Result::AssertionFail => 2,
             Result::Panic => 3,
-            _ => panic!("failed to convert into Result from u32"),
+            Result::Timeout => 4,
         }
     }
 }
