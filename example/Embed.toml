@@ -1,0 +1,25 @@
+[default.probe]
+protocol = "Swd"
+
+[default.flashing]
+enabled = true
+restore_unwritten_bytes = false
+
+[default.reset]
+enabled = true
+halt_afterwards = false
+
+[default.general]
+chip = "nRF52832_xxAA"
+chip_descriptions = []
+log_level = "WARN"
+
+[default.rtt]
+enabled = false
+channels = []
+timeout = 3000
+show_timestamps = true
+log_enabled = false
+
+[default.gdb]
+enabled = false
