@@ -16,7 +16,7 @@ use runtime_block::RuntimeBlock;
 
 /// Syntactic sugar for your test assertions.
 #[macro_export]
-macro_rules! emt_assert_eq {
+macro_rules! test_eq {
     ($lhs:expr, $rhs:expr) => {
         if $lhs != $rhs {
             emt_rt::fail_test();
