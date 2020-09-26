@@ -8,7 +8,7 @@ fn main() {
 
     let meta = runner.meta();
     println!(
-        "running {} {} containing {} test(s)",
+        "Attached to runtime {} {} containing {} test(s)",
         meta.id, meta.version, meta.num_tests
     );
 
@@ -18,9 +18,9 @@ fn main() {
     }
 
     println!(
-        "passed: {}, failed: {}, skipped: {}",
+        "Result: passed: {}, failed: {}, skipped: {}",
         report.passed(),
         report.failed(),
-        report.skipped()
+        report.skipped(),
     );
 }

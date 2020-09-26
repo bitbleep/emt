@@ -1,3 +1,4 @@
+use colored::*;
 use probe_rs::{MemoryInterface, Session};
 
 use common::runtime::{self, decode_u32, encode_u32, Event, Runtime, Status};
@@ -12,10 +13,10 @@ pub struct Runner {
 impl Runner {
     pub fn attach() -> Result<Self, Error> {
         let mut session = Session::auto_attach("nrf52").map_err(|_err| Error::AttachFailed)?;
-        eprintln!("auto attached nrf52");
+        // println!("auto attached nrf52");
 
         let base_address = detect_runtime(&mut session, 0x2000_0000, 0x10000)?;
-        eprintln!("found base address: 0x{:08x}", base_address);
+        // println!("found base address: 0x{:08x}", base_address);
 
         let mut link = Link::new(base_address, session);
         let meta = match link.request(Event::MetaRequest)? {
@@ -41,13 +42,17 @@ impl crate::runner::Runner for Runner {
         // reset board before every test
         self.link.reset();
 
-        println!("injecting: test {}", id);
         match self
             .link
             .request(Event::Test(id))
             .expect("failed to inject test")
         {
-            Event::Context(context) => eprintln!("{}: {}", context.name, context.description),
+            Event::Context(context) => println!(
+                "\n{} {}; {}",
+                "Running".bold(),
+                context.name,
+                context.description
+            ),
             _ => panic!("unexpected event"),
         }
         self.link.complete_request();
@@ -55,13 +60,13 @@ impl crate::runner::Runner for Runner {
         loop {
             let result = match self.link.read().expect("failed to read from runtime") {
                 Event::Output(message) => {
-                    eprintln!("{}", message);
+                    println!("  {}", message);
                     None
                 }
                 Event::Result(result) => {
                     match result.did_pass() {
-                        true => eprintln!("PASS"),
-                        false => eprintln!("FAIL ({:?})", result),
+                        true => println!("  {}", "pass".green()),
+                        false => println!("  {} ({:?})", "fail".red(), result),
                     }
                     Some(result)
                 }
@@ -123,7 +128,7 @@ impl common::runtime::Runtime for Link {
         // for i in OFFSET_STATUS_ID..OFFSET_STATUS_ID + 4 {
         //     eprint!("{:02x} ", self.io_buf[i]);
         // }
-        // eprintln!("status(): {}", status_id);
+        // println!("status(): {}", status_id);
         Status::from_u32(status_id)
     }
 
@@ -165,7 +170,7 @@ impl common::runtime::Runtime for Link {
         .expect("waah");
         let event_id = decode_u32(&self.io_buf[OFFSET_EVENT_ID..])?;
         let data_size = decode_u32(&self.io_buf[OFFSET_DATA_SIZE..])? as usize;
-        // eprintln!(
+        // println!(
         //     "decode_event event_id: {}, data_size: {}",
         //     event_id, data_size
         // );
