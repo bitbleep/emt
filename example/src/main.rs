@@ -5,6 +5,8 @@ mod tests;
 
 use emt_rt::*;
 
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+
 const TESTS: [Test; 6] = [
     Test {
         context: Context {
@@ -70,5 +72,5 @@ const TESTS: [Test; 6] = [
 
 #[cortex_m_rt::entry]
 fn main() -> ! {
-    emt_rt::start("emt example tests", "1.0.0", &TESTS);
+    emt_rt::start("emt example tests", &VERSION, &TESTS);
 }
