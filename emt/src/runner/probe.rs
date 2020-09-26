@@ -1,9 +1,10 @@
+use std::time::{Duration, Instant};
+
 use colored::*;
 use probe_rs::{MemoryInterface, Session};
 
+use crate::runner::{Error, RuntimeMeta, TestContext};
 use common::runtime::{self, decode_u32, encode_u32, Event, Runtime, Status};
-
-use crate::runner::{Error, RuntimeMeta};
 
 pub struct Runner {
     meta: RuntimeMeta,
@@ -42,47 +43,63 @@ impl crate::runner::Runner for Runner {
         // reset board before every test
         self.link.reset();
 
-        match self
+        let context = match self
             .link
             .request(Event::Test(id))
             .expect("failed to inject test")
         {
-            Event::Context(context) => println!(
-                "\n{} {}; {}",
-                "Running".bold(),
-                context.name,
-                context.description
-            ),
+            Event::Context(context) => TestContext {
+                name: context.name.to_owned(),
+                description: context.description.to_owned(),
+                requires_human_interaction: context.requires_human_interaction,
+                should_panic: context.should_panic,
+                timeout_ms: context.timeout_ms,
+            },
             _ => panic!("unexpected event"),
-        }
+        };
         self.link.complete_request();
 
+        println!(
+            "\n{} {}; {}",
+            "Running".bold(),
+            context.name,
+            context.description
+        );
+
+        let start_instant = Instant::now();
+
         loop {
-            let result = match self.link.read().expect("failed to read from runtime") {
-                Event::Output(message) => {
+            let result = match self.link.try_read() {
+                Ok(Some(Event::Output(message))) => {
                     println!("  {}", message);
+                    self.link
+                        .respond(Event::None)
+                        .expect("failed to respond to runtime");
                     None
                 }
-                Event::Result(result) => {
+                Ok(Some(Event::Result(result))) => {
                     match result.did_pass() {
                         true => println!("  {}", "pass".green()),
                         false => println!("  {} ({:?})", "fail".red(), result),
                     }
+                    self.link
+                        .respond(Event::None)
+                        .expect("failed to respond to runtime");
                     Some(result)
                 }
-                _ => panic!("unexpected event"),
+                Ok(Some(_)) => panic!("unexpected event"),
+                Ok(None) => None,
+                Err(err) => panic!("failed to read from runtime {:?}", err),
             };
-
-            self.link
-                .respond(Event::None)
-                .expect("failed to respond to runtime");
 
             if let Some(result) = result {
                 return Ok(result);
             }
-        }
 
-        // todo: timeout
+            if start_instant.elapsed() >= Duration::from_millis(context.timeout_ms as u64) {
+                return Ok(common::test::Result::Timeout);
+            }
+        }
     }
 }
 

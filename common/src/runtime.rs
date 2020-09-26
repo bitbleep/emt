@@ -187,6 +187,13 @@ pub trait Runtime {
         self.await_status(Status::Send);
         self.decode_event()
     }
+
+    fn try_read(&mut self) -> Result<Option<Event>, Error> {
+        match self.status() {
+            Status::Send => Ok(Some(self.decode_event()?)),
+            _ => Ok(None),
+        }
+    }
 }
 
 pub fn encode_u32(value: u32, into: &mut [u8]) -> Result<usize, Error> {
