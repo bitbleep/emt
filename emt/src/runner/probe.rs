@@ -97,7 +97,9 @@ impl crate::runner::Runner for Runner {
             }
 
             if start_instant.elapsed() >= Duration::from_millis(context.timeout_ms as u64) {
-                return Ok(common::test::Result::Timeout);
+                let result = common::test::Result::Timeout;
+                println!("  {} ({:?})", "fail".red(), result);
+                return Ok(result);
             }
         }
     }

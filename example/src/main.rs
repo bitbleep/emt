@@ -54,7 +54,7 @@ const TESTS: [Test; 6] = [
             description: "Start a timer and wait for it to finish",
             requires_human_interaction: false,
             should_panic: false,
-            timeout_ms: 500,
+            timeout_ms: 5000,
         },
         run: tests::timer_wait,
     },
