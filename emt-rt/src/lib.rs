@@ -1,5 +1,8 @@
 #![no_std]
 
+//! Runtime for embedded tests.
+//!
+
 mod runtime_block;
 
 use core::{
@@ -9,12 +12,14 @@ use core::{
 
 use cortex_m::interrupt;
 
-pub use common::runtime::{Event, Meta, Runtime};
+pub use common::runtime::{Error, Event, Meta, Runtime};
 pub use common::test::{self, Context};
 
 use runtime_block::RuntimeBlock;
 
-/// Syntactic sugar for your test assertions.
+/// Tests two values for equality.
+///
+/// Use this macro for all test comparisons.
 #[macro_export]
 macro_rules! test_eq {
     ($lhs:expr, $rhs:expr) => {
@@ -52,6 +57,7 @@ impl TestState {
     }
 }
 
+/// Starts the runtime.
 pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) -> ! {
     let runtime_meta = Meta {
         id,
@@ -145,16 +151,4 @@ fn poll_runtime(runtime_block: &mut RuntimeBlock, meta: Meta, tests: &[Test]) ->
         _ => return Err(Error::UnexpectedEvent),
     }
     Ok(())
-}
-
-#[derive(Debug)]
-enum Error {
-    UnexpectedEvent,
-    RuntimeError(common::runtime::Error),
-}
-
-impl core::convert::From<common::runtime::Error> for Error {
-    fn from(err: common::runtime::Error) -> Self {
-        Error::RuntimeError(err)
-    }
 }
