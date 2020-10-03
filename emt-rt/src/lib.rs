@@ -3,19 +3,15 @@
 //! Runtime for embedded tests.
 //!
 
-mod runtime_block;
-
 use core::{
     panic::PanicInfo,
     sync::atomic::{self, Ordering},
 };
 
-use cortex_m::interrupt;
-
-pub use common::runtime::{Error, Event, Meta, Runtime};
+pub use common::runtime::{Error, Meta, Test};
 pub use common::test::{self, Context};
 
-use runtime_block::RuntimeBlock;
+use common::runtime::{Event, Runtime, RuntimeBlock, TestStatus};
 
 /// Tests two values for equality.
 ///
@@ -24,38 +20,13 @@ use runtime_block::RuntimeBlock;
 macro_rules! test_eq {
     ($lhs:expr, $rhs:expr) => {
         if $lhs != $rhs {
-            emt_rt::fail_test();
+            emt_rt::fail();
         }
     };
 }
 
 #[no_mangle]
 static mut EMT_RUNTIME_BLOCK: RuntimeBlock = RuntimeBlock::new();
-static mut EMT_TEST_STATE: TestState = TestState {
-    is_running: false,
-    should_panic: false,
-};
-
-pub struct Test<'a> {
-    pub context: Context<'a>,
-    pub run: fn(),
-}
-
-struct TestState {
-    is_running: bool,
-    should_panic: bool,
-}
-
-impl TestState {
-    fn begin(&mut self, should_panic: bool) {
-        self.is_running = true;
-        self.should_panic = should_panic;
-    }
-
-    fn end(&mut self) {
-        self.is_running = false;
-    }
-}
 
 /// Starts the runtime.
 pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) -> ! {
@@ -68,28 +39,33 @@ pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) ->
     unsafe {
         EMT_RUNTIME_BLOCK.init();
         loop {
-            if let Err(err) = poll_runtime(&mut EMT_RUNTIME_BLOCK, runtime_meta, tests) {
+            if let Err(err) = EMT_RUNTIME_BLOCK.poll(runtime_meta, tests) {
                 panic!("runtime error: {:?}", err);
             }
         }
     }
 }
 
+/// Fails the currently running test.
 #[inline(always)]
-pub fn fail_test() {
+// todo: can i make this not be pub
+pub fn fail() {
     unsafe {
+        // todo: state should be: test running
         EMT_RUNTIME_BLOCK
             .request(Event::Result(test::Result::AssertionFail))
             .expect("runtime request failed");
         EMT_RUNTIME_BLOCK.complete_request();
-        EMT_TEST_STATE.end();
+        EMT_RUNTIME_BLOCK.end_test();
     }
-    panic!("fail_test");
+    panic!("fail()");
 }
 
+/// Outputs a message from the runtime to the test runner.
 #[inline(always)]
 pub fn output<'a>(message: &'a str) {
     unsafe {
+        // todo: state should be: test running
         EMT_RUNTIME_BLOCK
             .request(Event::Output(message))
             .expect("runtime request failed");
@@ -100,55 +76,25 @@ pub fn output<'a>(message: &'a str) {
 #[inline(never)]
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
-    interrupt::disable();
+    cortex_m::interrupt::disable();
 
     unsafe {
-        if EMT_TEST_STATE.is_running {
-            let result = match EMT_TEST_STATE.should_panic {
-                true => test::Result::Pass,
-                false => test::Result::Panic,
-            };
-            let result_response = Event::Result(result);
-            EMT_RUNTIME_BLOCK.request(result_response).ok();
-            EMT_RUNTIME_BLOCK.complete_request();
-            EMT_TEST_STATE.end();
+        match EMT_RUNTIME_BLOCK.test_status() {
+            TestStatus::Running { should_panic } => {
+                let result = match should_panic {
+                    true => test::Result::Pass,
+                    false => test::Result::Panic,
+                };
+                let result_response = Event::Result(result);
+                EMT_RUNTIME_BLOCK.request(result_response).ok();
+                EMT_RUNTIME_BLOCK.complete_request();
+                EMT_RUNTIME_BLOCK.end_test();
+            }
+            TestStatus::NotRunning => {}
         }
     }
 
     loop {
         atomic::compiler_fence(Ordering::SeqCst);
     }
-}
-
-#[inline(always)]
-fn poll_runtime(runtime_block: &mut RuntimeBlock, meta: Meta, tests: &[Test]) -> Result<(), Error> {
-    match runtime_block.read()? {
-        Event::MetaRequest => {
-            let meta_response = Event::Meta(meta);
-            runtime_block.respond(meta_response)?;
-        }
-        Event::Test(id) => {
-            let id = id as usize;
-            if id < tests.len() {
-                let test = &tests[id];
-                unsafe {
-                    EMT_TEST_STATE.begin(test.context.should_panic);
-                }
-                let context_response = Event::Context(test.context);
-                runtime_block.respond(context_response)?;
-                (test.run)();
-                let result_response = Event::Result(test::Result::Pass);
-                runtime_block.request(result_response)?;
-                runtime_block.complete_request();
-                unsafe {
-                    EMT_TEST_STATE.end();
-                }
-            } else {
-                let result_response = Event::Result(test::Result::NotFound);
-                runtime_block.request(result_response)?;
-            }
-        }
-        _ => return Err(Error::UnexpectedEvent),
-    }
-    Ok(())
 }

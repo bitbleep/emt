@@ -1,53 +1,5 @@
+use crate::runtime::{Error, Meta};
 use crate::test::{self, Context};
-
-#[derive(Debug, Copy, Clone)]
-pub enum Error {
-    BufferOverflow,
-    UnexpectedEvent,
-    IllegalEventId,
-    IllegalString,
-    IllegalBool,
-    IllegalStatus { actual: Status, expected: Status },
-}
-
-#[derive(Debug, Copy, Clone)]
-pub struct Meta<'a> {
-    pub id: &'a str,
-    pub version: &'a str,
-    pub num_tests: u32,
-}
-
-// todo: this should be a safer setup of TryFrom/Into etc.
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-#[repr(u32)]
-pub enum Status {
-    NotReady = 0,
-    Idle,
-    Send,
-    Receive,
-}
-
-// todo: haxxx, do it properly
-impl Status {
-    pub fn from_u32(value: u32) -> Status {
-        match value {
-            0 => Status::NotReady,
-            1 => Status::Idle,
-            2 => Status::Send,
-            3 => Status::Receive,
-            _ => panic!("fudge"),
-        }
-    }
-
-    pub fn to_u32(&self) -> u32 {
-        match *self {
-            Status::NotReady => 0,
-            Status::Idle => 1,
-            Status::Send => 2,
-            Status::Receive => 3,
-        }
-    }
-}
 
 #[derive(Debug, Copy, Clone)]
 pub enum Event<'a> {
@@ -150,49 +102,6 @@ impl<'a> Event<'a> {
             6 => Event::Result(test::Result::from(decode_u32(from)?)),
             _ => return Err(Error::IllegalEventId),
         })
-    }
-}
-
-pub trait Runtime {
-    fn status(&mut self) -> Status;
-    fn set_status(&mut self, status: Status);
-    fn encode_event(&mut self, event: Event) -> Result<(), Error>;
-    fn decode_event(&mut self) -> Result<Event, Error>;
-
-    fn await_status(&mut self, status: Status) {
-        while self.status() != status {}
-    }
-
-    fn request(&mut self, event: Event) -> Result<Event, Error> {
-        self.await_status(Status::Idle);
-        self.encode_event(event)?;
-        self.set_status(Status::Send);
-        self.await_status(Status::Receive);
-        let event = self.decode_event()?;
-        Ok(event)
-    }
-
-    fn complete_request(&mut self) {
-        self.set_status(Status::Idle);
-    }
-
-    fn respond(&mut self, event: Event) -> Result<(), Error> {
-        self.await_status(Status::Send);
-        self.encode_event(event)?;
-        self.set_status(Status::Receive);
-        Ok(())
-    }
-
-    fn read(&mut self) -> Result<Event, Error> {
-        self.await_status(Status::Send);
-        self.decode_event()
-    }
-
-    fn try_read(&mut self) -> Result<Option<Event>, Error> {
-        match self.status() {
-            Status::Send => Ok(Some(self.decode_event()?)),
-            _ => Ok(None),
-        }
     }
 }
 

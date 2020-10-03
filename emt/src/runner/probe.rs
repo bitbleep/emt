@@ -1,10 +1,11 @@
+use std::convert::TryFrom;
 use std::time::{Duration, Instant};
 
 use colored::*;
 use probe_rs::{MemoryInterface, Session};
 
 use crate::runner::{Error, RuntimeMeta, TestContext};
-use common::runtime::{self, decode_u32, encode_u32, Event, Runtime, Status};
+use common::runtime::{self, decode_u32, encode_u32, Event, Runtime, Status, TestStatus};
 
 pub struct Runner {
     meta: RuntimeMeta,
@@ -14,12 +15,24 @@ pub struct Runner {
 impl Runner {
     pub fn attach() -> Result<Self, Error> {
         let mut session = Session::auto_attach("nrf52").map_err(|_err| Error::AttachFailed)?;
-        // println!("auto attached nrf52");
+        println!("auto attached nrf52");
+
+        println!("reset device");
+        session
+            .core(0)
+            .expect("failed to get core")
+            .reset()
+            .expect("failed to reset");
 
         let base_address = detect_runtime(&mut session, 0x2000_0000, 0x10000)?;
-        // println!("found base address: 0x{:08x}", base_address);
+        println!("found base address: 0x{:08x}", base_address);
 
         let mut link = Link::new(base_address, session);
+        println!("status: {:?}", link.status());
+        println!("test_status: {:?}", link.test_status());
+        print!("waiting for idle runtime.. ");
+        while link.status() != Status::Idle {}
+        println!("ok");
         let meta = match link.request(Event::MetaRequest)? {
             Event::Meta(meta) => RuntimeMeta {
                 id: meta.id.to_string(),
@@ -29,6 +42,7 @@ impl Runner {
             _ => return Err(Error::RuntimeError(runtime::Error::UnexpectedEvent)),
         };
         link.complete_request();
+        println!("herro");
 
         Ok(Self { meta, link })
     }
@@ -106,9 +120,10 @@ impl crate::runner::Runner for Runner {
 }
 
 const OFFSET_STATUS_ID: usize = 12;
-const OFFSET_EVENT_ID: usize = 16;
-const OFFSET_DATA_SIZE: usize = 20;
-const OFFSET_DATA: usize = 24;
+const OFFSET_TEST_STATUS: usize = 16;
+const OFFSET_EVENT_ID: usize = 20;
+const OFFSET_DATA_SIZE: usize = 24;
+const OFFSET_DATA: usize = 32;
 
 struct Link {
     base_address: u32,
@@ -144,10 +159,6 @@ impl common::runtime::Runtime for Link {
         .expect("waah");
         let status_id =
             decode_u32(&self.io_buf[OFFSET_STATUS_ID..]).expect("failed to decode status");
-        // for i in OFFSET_STATUS_ID..OFFSET_STATUS_ID + 4 {
-        //     eprint!("{:02x} ", self.io_buf[i]);
-        // }
-        // println!("status(): {}", status_id);
         Status::from_u32(status_id)
     }
 
@@ -162,6 +173,18 @@ impl common::runtime::Runtime for Link {
         .expect("waah");
     }
 
+    fn test_status(&mut self) -> TestStatus {
+        read(
+            &mut self.session,
+            self.base_address + OFFSET_TEST_STATUS as u32,
+            &mut self.io_buf[OFFSET_TEST_STATUS..OFFSET_TEST_STATUS + 4],
+        )
+        .expect("waah");
+        let test_status =
+            decode_u32(&self.io_buf[OFFSET_TEST_STATUS..]).expect("failed to decode status");
+        TestStatus::try_from(test_status).expect("iiih")
+    }
+
     fn encode_event(&mut self, event: Event) -> Result<(), runtime::Error> {
         let event_id = event.id();
         let data_size = event.encode(&mut self.io_buf[OFFSET_DATA..])? as u32;
@@ -174,9 +197,16 @@ impl common::runtime::Runtime for Link {
         write(
             &mut self.session,
             self.base_address + OFFSET_EVENT_ID as u32,
-            &mut self.io_buf[OFFSET_EVENT_ID..OFFSET_EVENT_ID + 8 + data_size as usize],
+            &mut self.io_buf[OFFSET_EVENT_ID..OFFSET_EVENT_ID + 12 + data_size as usize],
         )
         .expect("waah");
+
+        // todo: debug:
+        println!("status: {:?}", self.status());
+        println!("test_status: {:?}", self.test_status());
+        println!("event_id: {}", event_id);
+        println!("data_size: {}", data_size);
+
         Ok(())
     }
 
@@ -184,15 +214,15 @@ impl common::runtime::Runtime for Link {
         read(
             &mut self.session,
             self.base_address + OFFSET_EVENT_ID as u32,
-            &mut self.io_buf[OFFSET_EVENT_ID..OFFSET_EVENT_ID + 8],
+            &mut self.io_buf[OFFSET_EVENT_ID..OFFSET_EVENT_ID + 12],
         )
         .expect("waah");
         let event_id = decode_u32(&self.io_buf[OFFSET_EVENT_ID..])?;
         let data_size = decode_u32(&self.io_buf[OFFSET_DATA_SIZE..])? as usize;
-        // println!(
-        //     "decode_event event_id: {}, data_size: {}",
-        //     event_id, data_size
-        // );
+        println!(
+            "decode_event event_id: {}, data_size: {}",
+            event_id, data_size
+        );
         read(
             &mut self.session,
             self.base_address + OFFSET_DATA as u32,
