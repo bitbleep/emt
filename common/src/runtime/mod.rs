@@ -76,7 +76,6 @@ impl core::convert::TryInto<u32> for TestStatus {
                 should_panic: false,
             } => Ok(1),
             TestStatus::Running { should_panic: true } => Ok(2),
-            _ => Err(Error::BufferOverflow), // todo: not buffer overflow of course
         }
     }
 }
