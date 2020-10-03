@@ -17,19 +17,18 @@ impl Runner {
         let mut session = Session::auto_attach("nrf52").map_err(|_err| Error::AttachFailed)?;
         println!("auto attached nrf52");
 
-        println!("reset device");
+        print!("reset device.. ");
         session
             .core(0)
             .expect("failed to get core")
             .reset()
             .expect("failed to reset");
+        println!("ok");
 
         let base_address = detect_runtime(&mut session, 0x2000_0000, 0x10000)?;
-        println!("found base address: 0x{:08x}", base_address);
+        println!("found runtime at address: 0x{:08x}", base_address);
 
         let mut link = Link::new(base_address, session);
-        println!("status: {:?}", link.status());
-        println!("test_status: {:?}", link.test_status());
         print!("waiting for idle runtime.. ");
         while link.status() != Status::Idle {}
         println!("ok");
@@ -42,7 +41,6 @@ impl Runner {
             _ => return Err(Error::RuntimeError(runtime::Error::UnexpectedEvent)),
         };
         link.complete_request();
-        println!("herro");
 
         Ok(Self { meta, link })
     }
@@ -201,12 +199,6 @@ impl common::runtime::Runtime for Link {
         )
         .expect("waah");
 
-        // todo: debug:
-        println!("status: {:?}", self.status());
-        println!("test_status: {:?}", self.test_status());
-        println!("event_id: {}", event_id);
-        println!("data_size: {}", data_size);
-
         Ok(())
     }
 
@@ -217,18 +209,17 @@ impl common::runtime::Runtime for Link {
             &mut self.io_buf[OFFSET_EVENT_ID..OFFSET_EVENT_ID + 12],
         )
         .expect("waah");
+
         let event_id = decode_u32(&self.io_buf[OFFSET_EVENT_ID..])?;
         let data_size = decode_u32(&self.io_buf[OFFSET_DATA_SIZE..])? as usize;
-        println!(
-            "decode_event event_id: {}, data_size: {}",
-            event_id, data_size
-        );
+
         read(
             &mut self.session,
             self.base_address + OFFSET_DATA as u32,
             &mut self.io_buf[OFFSET_DATA..OFFSET_DATA + data_size],
         )
         .expect("waah");
+
         Event::decode(event_id, &self.io_buf[OFFSET_DATA..OFFSET_DATA + data_size])
     }
 }

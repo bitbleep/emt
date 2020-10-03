@@ -1,10 +1,12 @@
+use core::convert::{TryFrom, TryInto};
+
 use crate::runtime::{Error, Event, Meta, Runtime, Status, Test, TestStatus};
 
 #[repr(C)]
 pub struct RuntimeBlock {
     magic_sequence: [u8; 12],
     status: Status,
-    test_status: TestStatus,
+    test_status: u32,
     event_id: u32,
     data_size: u32,
     reserved: u32,
@@ -16,7 +18,7 @@ impl RuntimeBlock {
         Self {
             magic_sequence: [0u8; 12],
             status: Status::NotReady,
-            test_status: TestStatus::NotRunning,
+            test_status: 0, // todo: TestStatus::NotRunning.try_into().expect("waah"),
             event_id: Event::None.id(),
             data_size: 0,
             reserved: 0,
@@ -36,11 +38,13 @@ impl RuntimeBlock {
     }
 
     pub fn begin_test(&mut self, should_panic: bool) {
-        self.test_status = TestStatus::Running { should_panic };
+        self.test_status = TestStatus::Running { should_panic }
+            .try_into()
+            .expect("waah");
     }
 
     pub fn end_test(&mut self) {
-        self.test_status = TestStatus::NotRunning;
+        self.test_status = TestStatus::NotRunning.try_into().expect("waah");
     }
 
     /// Polls the runtime for incoming events from the test runner.
@@ -83,7 +87,7 @@ impl Runtime for RuntimeBlock {
     }
 
     fn test_status(&mut self) -> TestStatus {
-        self.test_status
+        TestStatus::try_from(self.test_status).expect("waah")
     }
 
     fn encode_event(&mut self, event: Event) -> Result<(), Error> {

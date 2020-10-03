@@ -66,6 +66,21 @@ impl TestStatus {
     }
 }
 
+impl core::convert::TryInto<u32> for TestStatus {
+    type Error = Error;
+
+    fn try_into(self) -> Result<u32, Error> {
+        match self {
+            TestStatus::NotRunning => Ok(0),
+            TestStatus::Running {
+                should_panic: false,
+            } => Ok(1),
+            TestStatus::Running { should_panic: true } => Ok(2),
+            _ => Err(Error::BufferOverflow), // todo: not buffer overflow of course
+        }
+    }
+}
+
 impl core::convert::TryFrom<u32> for TestStatus {
     type Error = Error;
 
