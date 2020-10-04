@@ -1,4 +1,4 @@
-use common::runtime;
+use common::{runtime, TestResult};
 
 pub mod probe;
 
@@ -63,7 +63,7 @@ impl TestReport {
         self.skipped += 1;
     }
 
-    pub fn append_result(&mut self, result: common::test::Result) {
+    pub fn append_result(&mut self, result: TestResult) {
         if result.did_pass() {
             self.passed += 1;
         } else {
@@ -74,5 +74,5 @@ impl TestReport {
 
 pub trait Runner {
     fn meta(&mut self) -> &RuntimeMeta;
-    fn run(&mut self, id: u32) -> Result<common::test::Result, Error>;
+    fn run(&mut self, id: u32) -> Result<TestResult, Error>;
 }

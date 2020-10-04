@@ -1,7 +1,6 @@
 use core::convert::{TryFrom, TryInto};
 
-use crate::runtime::{Error, Event, Meta, Runtime, Status, Test, TestStatus};
-use crate::test;
+use crate::{runtime::*, Test, TestResult};
 
 #[repr(C)]
 pub struct RuntimeBlock {
@@ -52,7 +51,7 @@ impl RuntimeBlock {
         if !self.test_status().is_running() {
             return Err(Error::NoTestRunning);
         }
-        self.request(Event::Result(test::Result::AssertionFail))?;
+        self.request(Event::Result(TestResult::AssertionFail))?;
         self.complete_request();
         self.end_test();
         Ok(())
@@ -71,8 +70,8 @@ impl RuntimeBlock {
         match self.test_status() {
             TestStatus::Running { should_panic } => {
                 let result = match should_panic {
-                    true => test::Result::Pass,
-                    false => test::Result::Panic,
+                    true => TestResult::Pass,
+                    false => TestResult::Panic,
                 };
                 let result_response = Event::Result(result);
                 self.request(result_response)?;
@@ -99,12 +98,12 @@ impl RuntimeBlock {
                     let context_response = Event::Context(test.context);
                     self.respond(context_response)?;
                     (test.run)();
-                    let result_response = Event::Result(crate::test::Result::Pass);
+                    let result_response = Event::Result(TestResult::Pass);
                     self.request(result_response)?;
                     self.complete_request();
                     self.end_test();
                 } else {
-                    let result_response = Event::Result(crate::test::Result::NotFound);
+                    let result_response = Event::Result(TestResult::NotFound);
                     self.request(result_response)?;
                 }
             }

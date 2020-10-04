@@ -4,18 +4,11 @@ mod runtime_block;
 pub use event::{decode_u32, encode_u32, Event};
 pub use runtime_block::RuntimeBlock;
 
-use crate::test::Context;
-
 #[derive(Debug, Copy, Clone)]
 pub struct Meta<'a> {
     pub id: &'a str,
     pub version: &'a str,
     pub num_tests: u32,
-}
-
-pub struct Test<'a> {
-    pub context: Context<'a>,
-    pub run: fn(),
 }
 
 // todo: this should be a safer setup of TryFrom/Into etc.

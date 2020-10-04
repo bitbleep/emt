@@ -8,10 +8,12 @@ use core::{
     sync::atomic::{self, Ordering},
 };
 
-pub use common::runtime::{Error, Meta, Test};
-pub use common::test::{self, Context};
+pub use common::{
+    runtime::{Error, Meta},
+    Test, TestContext, TestResult,
+};
 
-use common::runtime::{Event, Runtime, RuntimeBlock, TestStatus};
+use common::runtime::RuntimeBlock;
 
 /// Tests two values for equality.
 ///
@@ -50,8 +52,10 @@ pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) ->
 #[inline(always)]
 pub fn fail() {
     unsafe {
-        EMT_RUNTIME_BLOCK.fail_test();
-        panic!("runtime fail called");
+        if let Err(err) = EMT_RUNTIME_BLOCK.fail_test() {
+            panic!("fatal runtime error: {:?}", err);
+        }
+        panic!("test fail");
     }
 }
 

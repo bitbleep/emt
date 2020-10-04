@@ -1,5 +1,5 @@
 use crate::runtime::{Error, Meta};
-use crate::test::{self, Context};
+use crate::{TestContext, TestResult};
 
 #[derive(Debug, Copy, Clone)]
 pub enum Event<'a> {
@@ -7,9 +7,9 @@ pub enum Event<'a> {
     MetaRequest,
     Meta(Meta<'a>),
     Test(u32),
-    Context(Context<'a>),
+    Context(TestContext<'a>),
     Output(&'a str),
-    Result(test::Result),
+    Result(TestResult),
 }
 
 impl<'a> Event<'a> {
@@ -87,7 +87,7 @@ impl<'a> Event<'a> {
                 let should_panic = decode_bool(&from[len..])?;
                 len += 1;
                 let timeout_ms = decode_u32(&from[len..])?;
-                Event::Context(Context {
+                Event::Context(TestContext {
                     name,
                     description,
                     requires_human_interaction,
@@ -99,7 +99,7 @@ impl<'a> Event<'a> {
                 let (message, _) = decode_str(from)?;
                 Event::Output(message)
             }
-            6 => Event::Result(test::Result::from(decode_u32(from)?)),
+            6 => Event::Result(TestResult::from(decode_u32(from)?)),
             _ => return Err(Error::IllegalEventId),
         })
     }

@@ -6,7 +6,7 @@ use emt_rt::*;
 pub fn always_pass() {}
 
 pub fn always_fail() {
-    test_eq!(true, false)
+    test_eq!(true, false);
 }
 
 pub fn always_panic() {

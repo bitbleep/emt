@@ -5,7 +5,10 @@ use colored::*;
 use probe_rs::{MemoryInterface, Session};
 
 use crate::runner::{Error, RuntimeMeta, TestContext};
-use common::runtime::{self, decode_u32, encode_u32, Event, Runtime, Status, TestStatus};
+use common::{
+    runtime::{self, decode_u32, encode_u32, Event, Runtime, Status, TestStatus},
+    TestResult,
+};
 
 pub struct Runner {
     meta: RuntimeMeta,
@@ -51,7 +54,7 @@ impl crate::runner::Runner for Runner {
         &self.meta
     }
 
-    fn run(&mut self, id: u32) -> Result<common::test::Result, Error> {
+    fn run(&mut self, id: u32) -> Result<TestResult, Error> {
         // reset board before every test
         self.link.reset();
 
@@ -109,7 +112,7 @@ impl crate::runner::Runner for Runner {
             }
 
             if start_instant.elapsed() >= Duration::from_millis(context.timeout_ms as u64) {
-                let result = common::test::Result::Timeout;
+                let result = TestResult::Timeout;
                 println!("  {} ({:?})", "fail".red(), result);
                 return Ok(result);
             }
