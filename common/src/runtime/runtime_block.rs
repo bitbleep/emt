@@ -1,6 +1,7 @@
 use core::convert::{TryFrom, TryInto};
 
 use crate::runtime::{Error, Event, Meta, Runtime, Status, Test, TestStatus};
+use crate::test;
 
 #[repr(C)]
 pub struct RuntimeBlock {
@@ -45,6 +46,42 @@ impl RuntimeBlock {
 
     pub fn end_test(&mut self) {
         self.test_status = TestStatus::NotRunning.try_into().expect("waah");
+    }
+
+    pub fn fail_test(&mut self) -> Result<(), Error> {
+        if !self.test_status().is_running() {
+            return Err(Error::NoTestRunning);
+        }
+        self.request(Event::Result(test::Result::AssertionFail))?;
+        self.complete_request();
+        self.end_test();
+        Ok(())
+    }
+
+    pub fn output(&mut self, message: &str) -> Result<(), Error> {
+        if !self.test_status().is_running() {
+            return Err(Error::NoTestRunning);
+        }
+        self.request(Event::Output(message))?;
+        self.complete_request();
+        Ok(())
+    }
+
+    pub fn handle_panic(&mut self) -> Result<(), Error> {
+        match self.test_status() {
+            TestStatus::Running { should_panic } => {
+                let result = match should_panic {
+                    true => test::Result::Pass,
+                    false => test::Result::Panic,
+                };
+                let result_response = Event::Result(result);
+                self.request(result_response)?;
+                self.complete_request();
+                self.end_test();
+            }
+            TestStatus::NotRunning => {}
+        }
+        Ok(())
     }
 
     /// Polls the runtime for incoming events from the test runner.

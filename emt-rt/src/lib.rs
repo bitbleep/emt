@@ -40,7 +40,7 @@ pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) ->
         EMT_RUNTIME_BLOCK.init();
         loop {
             if let Err(err) = EMT_RUNTIME_BLOCK.poll(runtime_meta, tests) {
-                panic!("runtime error: {:?}", err);
+                panic!("fatal runtime error: {:?}", err);
             }
         }
     }
@@ -48,28 +48,20 @@ pub fn start(id: &'static str, version: &'static str, tests: &'static [Test]) ->
 
 /// Fails the currently running test.
 #[inline(always)]
-// todo: can i make this not be pub
 pub fn fail() {
     unsafe {
-        // todo: state should be: test running
-        EMT_RUNTIME_BLOCK
-            .request(Event::Result(test::Result::AssertionFail))
-            .expect("runtime request failed");
-        EMT_RUNTIME_BLOCK.complete_request();
-        EMT_RUNTIME_BLOCK.end_test();
+        EMT_RUNTIME_BLOCK.fail_test();
+        panic!("runtime fail called");
     }
-    panic!("fail()");
 }
 
 /// Outputs a message from the runtime to the test runner.
 #[inline(always)]
-pub fn output<'a>(message: &'a str) {
+pub fn output(message: &str) {
     unsafe {
-        // todo: state should be: test running
-        EMT_RUNTIME_BLOCK
-            .request(Event::Output(message))
-            .expect("runtime request failed");
-        EMT_RUNTIME_BLOCK.complete_request();
+        if let Err(err) = EMT_RUNTIME_BLOCK.output(message) {
+            panic!("fatal runtime error: {:?}", err);
+        }
     }
 }
 
@@ -79,22 +71,14 @@ fn panic(_info: &PanicInfo) -> ! {
     cortex_m::interrupt::disable();
 
     unsafe {
-        match EMT_RUNTIME_BLOCK.test_status() {
-            TestStatus::Running { should_panic } => {
-                let result = match should_panic {
-                    true => test::Result::Pass,
-                    false => test::Result::Panic,
-                };
-                let result_response = Event::Result(result);
-                EMT_RUNTIME_BLOCK.request(result_response).ok();
-                EMT_RUNTIME_BLOCK.complete_request();
-                EMT_RUNTIME_BLOCK.end_test();
-            }
-            TestStatus::NotRunning => {}
-        }
+        // we really don't really care about the
+        // result of this because we can't do
+        // anything about it anyway
+        EMT_RUNTIME_BLOCK.handle_panic().ok();
     }
 
     loop {
+        cortex_m::asm::wfi();
         atomic::compiler_fence(Ordering::SeqCst);
     }
 }

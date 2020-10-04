@@ -103,6 +103,7 @@ pub enum Error {
     IllegalString,
     IllegalBool,
     IllegalStatus { actual: Status, expected: Status },
+    NoTestRunning,
 }
 
 pub trait Runtime {
