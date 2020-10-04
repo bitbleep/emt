@@ -26,10 +26,12 @@ pub enum TestResult {
 }
 
 impl TestResult {
+    /// Returns `true` if the test result represents a passing test.
     pub fn did_pass(&self) -> bool {
         *self == TestResult::Pass
     }
 
+    /// Returns `true` if the test result represents a failing test.
     pub fn did_fail(&self) -> bool {
         !self.did_pass()
     }

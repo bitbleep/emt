@@ -2,6 +2,9 @@
 
 //! Runtime for embedded tests.
 //!
+//! Include this crate and call the `emt_rt::start` function.
+//!
+//! Note that this crate contains a panic handler which is necessary for the runtime to work properly.
 
 use core::{
     panic::PanicInfo,
