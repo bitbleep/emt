@@ -38,13 +38,21 @@ impl RuntimeBlock {
     }
 
     pub fn begin_test(&mut self, should_panic: bool) {
-        self.test_status = TestStatus::Running { should_panic }
+        let test_status = TestStatus::Running { should_panic }
             .try_into()
-            .expect("waah");
+            .expect("illegal test status");
+        unsafe {
+            core::ptr::write_volatile(&mut self.test_status, test_status);
+        }
     }
 
     pub fn end_test(&mut self) {
-        self.test_status = TestStatus::NotRunning.try_into().expect("waah");
+        let test_status = TestStatus::NotRunning
+            .try_into()
+            .expect("illegal test status");
+        unsafe {
+            core::ptr::write_volatile(&mut self.test_status, test_status);
+        }
     }
 
     pub fn fail_test(&mut self) -> Result<(), Error> {
@@ -115,24 +123,31 @@ impl RuntimeBlock {
 
 impl Runtime for RuntimeBlock {
     fn status(&mut self) -> Status {
-        self.status
+        unsafe { core::ptr::read_volatile(&self.status) }
     }
 
     fn set_status(&mut self, status: Status) {
-        self.status = status;
+        unsafe {
+            core::ptr::write_volatile(&mut self.status, status);
+        }
     }
 
     fn test_status(&mut self) -> TestStatus {
-        TestStatus::try_from(self.test_status).expect("waah")
+        let test_status = unsafe { core::ptr::read_volatile(&self.test_status) };
+        TestStatus::try_from(test_status).expect("illegal test status")
     }
 
     fn encode_event(&mut self, event: Event) -> Result<(), Error> {
-        self.event_id = event.id();
-        self.data_size = event.encode(&mut self.data)? as u32;
+        unsafe {
+            core::ptr::write_volatile(&mut self.event_id, event.id());
+            core::ptr::write_volatile(&mut self.data_size, event.encode(&mut self.data)? as u32);
+        }
         Ok(())
     }
 
     fn decode_event(&mut self) -> Result<Event, Error> {
-        Event::decode(self.event_id, &self.data[..self.data_size as usize])
+        let event_id = unsafe { core::ptr::read_volatile(&self.event_id) };
+        let data_size = unsafe { core::ptr::read_volatile(&self.data_size) };
+        Event::decode(event_id, &self.data[..data_size as usize])
     }
 }
