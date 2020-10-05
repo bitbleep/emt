@@ -1,5 +1,7 @@
 use common::{runtime, TestResult};
 
+use crate::cli::RunOptions;
+
 pub mod probe;
 
 #[derive(Debug, Copy, Clone)]
@@ -74,5 +76,5 @@ impl TestReport {
 
 pub trait Runner {
     fn meta(&mut self) -> &RuntimeMeta;
-    fn run(&mut self, id: u32) -> Result<TestResult, Error>;
+    fn run(&mut self, id: u32, run_options: &RunOptions) -> Result<TestResult, Error>;
 }

@@ -4,6 +4,7 @@ use std::time::{Duration, Instant};
 use colored::*;
 use probe_rs::{MemoryInterface, Session};
 
+use crate::cli::RunOptions;
 use crate::runner::{Error, RuntimeMeta, TestContext};
 use common::{
     runtime::{self, decode_u32, encode_u32, Event, Runtime, Status, TestStatus},
@@ -54,7 +55,7 @@ impl crate::runner::Runner for Runner {
         &self.meta
     }
 
-    fn run(&mut self, id: u32) -> Result<TestResult, Error> {
+    fn run(&mut self, id: u32, run_options: &RunOptions) -> Result<TestResult, Error> {
         // reset board before every test
         self.link.reset();
 

@@ -8,3 +8,4 @@ edition = "2018"
 common = { path = "../common" }
 probe-rs = "0.8.0"
 colored = "2"
+structopt = "0.3.18"
