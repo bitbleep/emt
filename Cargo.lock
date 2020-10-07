@@ -558,6 +558,7 @@ version = "0.1.0"
 dependencies = [
  "actix-web 3.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.116 (registry+https://github.com/rust-lang/crates.io-index)",
+ "structopt 0.3.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

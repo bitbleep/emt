@@ -1,6 +1,17 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer};
 use serde::{Deserialize, Serialize};
+use structopt::StructOpt;
 use uuid::Uuid;
+
+#[derive(StructOpt, Debug)]
+#[structopt(name = "emt-host")]
+pub struct HostOptions {
+    #[structopt(short = "d", long = "domain", default_value = "localhost")]
+    domain: String,
+
+    #[structopt(short = "p", long = "port", default_value = "8080")]
+    port: u16,
+}
 
 #[derive(Serialize, Debug)]
 struct Runtime {
@@ -45,10 +56,11 @@ async fn poll(web::Path(token): web::Path<Uuid>) -> HttpResponse {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let domain = "localhost";
-    let port = 1234_u16;
-    let addr = format!("{}:{}", domain, port);
+    let opt = HostOptions::from_args();
+    let addr = format!("{}:{}", opt.domain, opt.port);
+
     // todo: attach probe and share it across handlers
+
     HttpServer::new(|| {
         App::new()
             .data(web::JsonConfig::default().limit(4096))
