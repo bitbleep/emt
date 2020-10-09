@@ -45,6 +45,6 @@ async fn post_write(
     probe.write(params.address, &params.data).unwrap();
     HttpResponse::Ok().json(WriteResult {
         address: params.address,
-        len: params.data.len() as u32,
+        len: params.data.len(),
     })
 }

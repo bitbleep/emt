@@ -1,23 +1,41 @@
 use structopt::StructOpt;
 
 use emt::{
-    link::Hosted,
-    runner::{Runner, TestReport},
+    link::{Hosted, Probe},
+    runner::{DeviceLink, Runner, TestReport},
 };
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "emt-run")]
 pub struct RunOptions {
+    #[structopt(short = "l", long = "link", default_value = "probe")]
+    pub link: String,
+
+    #[structopt(short = "d", long = "domain", default_value = "localhost")]
+    pub domain: String,
+
+    #[structopt(short = "p", long = "port", default_value = "8080")]
+    pub port: u16,
+
     /// Skip tests that require human interaction
-    #[structopt(short, long)]
+    #[structopt(short = "n", long)]
     pub no_human_interaction: bool,
 }
 
 fn main() {
     let opt = RunOptions::from_args();
 
-    let link = Hosted::new("http://localhost:8080").expect("failed to connect to host");
-    // let link = Probe::new().expect("failed to attach probe");
+    match opt.link.to_lowercase().as_str() {
+        "probe" => run(Probe::new().expect("failed to attach probe")),
+        "hosted" => run(Hosted::new(&opt.domain, opt.port).expect("failed to connect to host")),
+        link_name => panic!("unknown link type {}", link_name),
+    }
+}
+
+fn run<T>(link: T)
+where
+    T: DeviceLink,
+{
     let mut runner = Runner::new(link);
     let mut report = TestReport::new();
 

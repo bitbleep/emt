@@ -12,7 +12,7 @@ pub struct Reset {}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ReadParams {
     pub address: u32,
-    pub len: u32,
+    pub len: usize,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -30,5 +30,5 @@ pub struct WriteParams {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WriteResult {
     pub address: u32,
-    pub len: u32,
+    pub len: usize,
 }
