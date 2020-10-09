@@ -3,7 +3,7 @@ use std::sync::Mutex;
 use actix_web::{web, App, HttpServer};
 use structopt::StructOpt;
 
-use emt::link::Probe;
+use core::link::Probe;
 
 mod handlers;
 

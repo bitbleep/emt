@@ -5,7 +5,7 @@ authors = ["Martin <martin@bitbleep.com>"]
 edition = "2018"
 
 [dependencies]
-emt = { path = "../emt" }
+core = { path = "../core" }
 structopt = "0.3.18"
 serde = "1.0.116"
 actix-web = "3"

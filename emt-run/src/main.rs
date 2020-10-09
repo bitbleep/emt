@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 
-use emt::{
+use core::{
     link::{Hosted, Probe},
     runner::{DeviceLink, Runner, TestReport},
 };

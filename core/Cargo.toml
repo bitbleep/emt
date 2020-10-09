@@ -1,11 +1,11 @@
 [package]
-name = "emt"
+name = "core"
 version = "0.1.0"
 authors = ["Martin Carltoft <martin@bitbleep.com>"]
 edition = "2018"
 
 [dependencies]
-common = { path = "../common" }
+rt-core = { path = "../rt-core" }
 probe-rs = "0.8.0"
 colored = "2"
 structopt = "0.3.18"
