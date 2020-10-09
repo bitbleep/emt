@@ -5,8 +5,12 @@ pub struct Hosted {
 }
 
 impl Hosted {
-    pub fn new(domain: &str, port: u16) -> Result<Self, Error> {
-        // call GET url/probe {}
+    pub fn new(base_url: &str) -> Result<Self, Error> {
+        let resp = reqwest::blocking::get(&format!("{}/probe", base_url))
+            .unwrap()
+            .json::<crate::host::ProbeInfo>()
+            .unwrap();
+        println!("{:?}", resp);
         unimplemented!();
     }
 }

@@ -9,3 +9,6 @@ common = { path = "../common" }
 probe-rs = "0.8.0"
 colored = "2"
 structopt = "0.3.18"
+reqwest = { version = "0.10", features = ["blocking", "json"] }
+serde = "1.0.116"
+actix-web = "3"
