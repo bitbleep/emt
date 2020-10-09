@@ -8,8 +8,6 @@ use common::{
     TestResult,
 };
 
-use crate::cli::RunOptions;
-
 #[derive(Debug, Copy, Clone)]
 pub enum Error {
     AttachFailed,
@@ -122,7 +120,7 @@ where
         Ok(meta)
     }
 
-    pub fn run(&mut self, id: u32, run_options: &RunOptions) -> Result<TestResult, Error> {
+    pub fn run(&mut self, id: u32) -> Result<TestResult, Error> {
         // reset board before every test
         self.device_link.reset()?;
 
