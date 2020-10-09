@@ -1,3 +1,4 @@
+use crate::host::models::*;
 use crate::runner::{DeviceLink, Error};
 
 pub struct Hosted {
@@ -8,7 +9,7 @@ impl Hosted {
     pub fn new(base_url: &str) -> Result<Self, Error> {
         let resp = reqwest::blocking::get(&format!("{}/probe", base_url))
             .unwrap()
-            .json::<crate::host::ProbeInfo>()
+            .json::<ProbeInfo>()
             .unwrap();
         println!("{:?}", resp);
         unimplemented!();

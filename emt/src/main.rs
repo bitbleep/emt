@@ -3,9 +3,6 @@ mod host;
 mod link;
 mod runner;
 
-use std::sync::Mutex;
-
-use actix_web::{web, App, HttpServer};
 use structopt::StructOpt;
 
 use link::{Hosted, Probe};
@@ -14,24 +11,9 @@ use runner::{Runner, TestReport};
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let opt = cli::HostOptions::from_args();
-    let addr = format!("{}:{}", opt.domain, opt.port);
-
-    // todo: attach probe and share it across handlers
+    let base_url = format!("{}:{}", opt.domain, opt.port);
     let probe = Probe::new().expect("failed to attach probe");
-    let shared_probe = web::Data::new(Mutex::new(probe));
-
-    HttpServer::new(move || {
-        App::new()
-            .app_data(shared_probe.clone())
-            .data(web::JsonConfig::default().limit(4096))
-            .service(host::handle_probe)
-            .service(host::handle_reset)
-            .service(host::handle_read)
-            .service(host::handle_write)
-    })
-    .bind(addr)?
-    .run()
-    .await
+    host::start(&base_url, probe).await
 }
 
 // fn main() {
