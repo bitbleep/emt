@@ -100,7 +100,7 @@ impl<'a> Event<'a> {
                 Event::Output(message)
             }
             6 => Event::Result(TestResult::from(decode_u32(from)?)),
-            _ => return Err(Error::IllegalEventId),
+            _ => return Err(Error::Decoding),
         })
     }
 }
@@ -142,11 +142,11 @@ pub fn decode_str(from: &[u8]) -> Result<(&str, usize), Error> {
         }
     }
     if len <= 1 {
-        return Err(Error::IllegalString);
+        return Err(Error::Decoding);
     }
     match core::str::from_utf8(&from[..len - 1]) {
         Ok(value) => Ok((value, len)),
-        Err(_) => Err(Error::IllegalString),
+        Err(_) => Err(Error::Decoding),
     }
 }
 
@@ -168,6 +168,6 @@ fn decode_bool(from: &[u8]) -> Result<bool, Error> {
     match from[0] {
         1 => Ok(true),
         0 => Ok(false),
-        _ => Err(Error::IllegalBool),
+        _ => Err(Error::Decoding),
     }
 }

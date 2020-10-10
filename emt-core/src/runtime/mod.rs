@@ -97,9 +97,8 @@ pub enum Error {
     Io,
     BufferOverflow,
     UnexpectedEvent,
-    IllegalEventId,
-    IllegalString,
-    IllegalBool,
+    Encoding,
+    Decoding,
     IllegalStatus { actual: Status, expected: Status },
     NoTestRunning,
 }

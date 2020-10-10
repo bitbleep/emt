@@ -33,14 +33,27 @@ where
     let mut runner = Runner::new(link);
     let mut report = TestReport::new();
 
-    let meta = runner.meta().expect("failed to get runtime meta");
+    let meta = match runner.meta() {
+        Ok(meta) => meta,
+        Err(err) => {
+            eprintln!("Failed to get runtime meta: {:?}", err);
+            std::process::exit(1);
+        }
+    };
+
     println!(
         "Attached to runtime {} {} containing {} test(s)",
         meta.id, meta.version, meta.num_tests
     );
 
     for id in 0..meta.num_tests {
-        let result = runner.run(id).expect("failed to run test");
+        let result = match runner.run(id) {
+            Ok(result) => result,
+            Err(err) => {
+                eprintln!("Failed to get run test {}: {:?}", id, err);
+                std::process::exit(1);
+            }
+        };
         report.append_result(result);
     }
 
@@ -50,4 +63,9 @@ where
         report.failed(),
         report.skipped(),
     );
+
+    match report.failed() {
+        failed if failed > 0 => std::process::exit(1),
+        _ => std::process::exit(0),
+    }
 }
