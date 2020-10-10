@@ -37,10 +37,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "46afbd2983a5d5a7bd740ccb198caf5b82f45c40c09c0eed36052d91cb92e719"
 
 [[package]]
-name = "common"
-version = "0.1.0"
-
-[[package]]
 name = "cortex-m"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -56,8 +52,8 @@ dependencies = [
 name = "emt-rt"
 version = "0.1.0"
 dependencies = [
- "common",
  "cortex-m",
+ "rt-core",
 ]
 
 [[package]]
@@ -87,6 +83,10 @@ dependencies = [
  "typenum",
  "version_check",
 ]
+
+[[package]]
+name = "rt-core"
+version = "0.1.0"
 
 [[package]]
 name = "rustc_version"

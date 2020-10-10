@@ -1,9 +1,0 @@
-[package]
-name = "emt-run"
-version = "0.1.0"
-authors = ["Martin <martin@bitbleep.com>"]
-edition = "2018"
-
-[dependencies]
-core = { path = "../core" }
-structopt = "0.3.18"

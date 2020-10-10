@@ -1,25 +1,14 @@
 use std::sync::Mutex;
 
 use actix_web::{web, App, HttpServer};
-use structopt::StructOpt;
 
-use core::link::Probe;
+use crate::{cli::HostOptions, link::Probe};
 
 mod handlers;
-
-#[derive(StructOpt, Debug)]
-#[structopt(name = "emt-host")]
-pub struct HostOptions {
-    #[structopt(short = "d", long = "domain", default_value = "localhost")]
-    pub domain: String,
-
-    #[structopt(short = "p", long = "port", default_value = "8080")]
-    pub port: u16,
-}
+pub mod models;
 
 #[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    let opt = HostOptions::from_args();
+pub async fn run(opt: HostOptions) -> std::io::Result<()> {
     let base_url = format!("{}:{}", opt.domain, opt.port);
     let probe = Probe::new().expect("failed to attach probe");
     let shared_probe = web::Data::new(Mutex::new(probe));

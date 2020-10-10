@@ -1,5 +1,5 @@
 [package]
-name = "core"
+name = "emt"
 version = "0.1.0"
 authors = ["Martin Carltoft <martin@bitbleep.com>"]
 edition = "2018"
@@ -11,3 +11,5 @@ colored = "2"
 structopt = "0.3.18"
 reqwest = { version = "0.10", features = ["blocking", "json"] }
 serde = "1.0.116"
+actix-web = "3"
+futures = "0.3.6"
