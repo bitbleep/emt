@@ -1,13 +1,16 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ProbeInfo {
+pub struct ProbeResponse {
     pub probe_attached: bool,
     pub base_address: Option<u32>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Reset {}
+pub struct ResetParams {}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ResetResponse {}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ReadParams {
@@ -16,7 +19,7 @@ pub struct ReadParams {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct ReadResult {
+pub struct ReadResponse {
     pub address: u32,
     pub data: Vec<u8>,
 }
@@ -28,7 +31,7 @@ pub struct WriteParams {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct WriteResult {
+pub struct WriteResponse {
     pub address: u32,
     pub len: usize,
 }
