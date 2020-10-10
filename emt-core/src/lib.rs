@@ -23,6 +23,7 @@ pub enum TestResult {
     AssertionFail,
     Panic,
     Timeout,
+    Skip,
 }
 
 impl TestResult {
@@ -31,9 +32,14 @@ impl TestResult {
         *self == TestResult::Pass
     }
 
+    /// Returns `true` if the test result represents a skipped test.
+    pub fn did_skip(&self) -> bool {
+        *self == TestResult::Skip
+    }
+
     /// Returns `true` if the test result represents a failing test.
     pub fn did_fail(&self) -> bool {
-        !self.did_pass()
+        !self.did_pass() && !self.did_skip()
     }
 }
 
@@ -45,6 +51,7 @@ impl core::convert::From<u32> for TestResult {
             2 => TestResult::AssertionFail,
             3 => TestResult::Panic,
             4 => TestResult::Timeout,
+            5 => TestResult::Skip,
             _ => panic!("failed to convert from u32 into TestResult"),
         }
     }
@@ -58,6 +65,7 @@ impl core::convert::Into<u32> for TestResult {
             TestResult::AssertionFail => 2,
             TestResult::Panic => 3,
             TestResult::Timeout => 4,
+            TestResult::Skip => 5,
         }
     }
 }

@@ -94,15 +94,21 @@ impl RuntimeBlock {
                 let meta_response = Event::Meta(meta);
                 self.respond(meta_response)?;
             }
-            Event::Test(id) => {
+            Event::Test(id, no_human_interaction) => {
                 let id = id as usize;
                 if id < tests.len() {
                     let test = &tests[id];
                     self.begin_test(test.context.should_panic)?;
                     let context_response = Event::Context(test.context);
                     self.respond(context_response)?;
-                    (test.run)();
-                    let result_response = Event::Result(TestResult::Pass);
+                    let test_result =
+                        if !no_human_interaction || !test.context.requires_human_interaction {
+                            (test.run)();
+                            TestResult::Pass
+                        } else {
+                            TestResult::Skip
+                        };
+                    let result_response = Event::Result(test_result);
                     self.request(result_response)?;
                     self.complete_request()?;
                     self.end_test()?;

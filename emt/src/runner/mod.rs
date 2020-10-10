@@ -78,6 +78,8 @@ impl TestReport {
     pub fn append_result(&mut self, result: TestResult) {
         if result.did_pass() {
             self.passed += 1;
+        } else if result.did_skip() {
+            self.skipped += 1;
         } else {
             self.failed += 1;
         }
@@ -119,11 +121,11 @@ where
         Ok(meta)
     }
 
-    pub fn run(&mut self, id: u32) -> Result<TestResult, Error> {
+    pub fn run(&mut self, id: u32, no_human_interaction: bool) -> Result<TestResult, Error> {
         // reset board before every test
         self.device_link.reset()?;
 
-        let context = match self.request(Event::Test(id))? {
+        let context = match self.request(Event::Test(id, no_human_interaction))? {
             Event::Context(context) => TestContext {
                 name: context.name.to_owned(),
                 description: context.description.to_owned(),
@@ -152,9 +154,10 @@ where
                     None
                 }
                 Some(Event::Result(result)) => {
-                    match result.did_pass() {
-                        true => println!("  {}", "pass".green()),
-                        false => println!("  {} ({:?})", "fail".red(), result),
+                    match result {
+                        result if result.did_pass() => println!("  {}", "pass".green()),
+                        result if result.did_skip() => println!("  {}", "skip".white()),
+                        _ => println!("  {} ({:?})", "fail".red(), result),
                     }
                     self.respond(Event::None)?;
                     Some(result)

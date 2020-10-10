@@ -6,7 +6,7 @@ pub enum Event<'a> {
     None,
     MetaRequest,
     Meta(Meta<'a>),
-    Test(u32),
+    Test(u32, bool),
     Context(TestContext<'a>),
     Output(&'a str),
     Result(TestResult),
@@ -18,7 +18,7 @@ impl<'a> Event<'a> {
             Event::None => 0,
             Event::MetaRequest => 1,
             Event::Meta(_) => 2,
-            Event::Test(_) => 3,
+            Event::Test(_, _) => 3,
             Event::Context(_) => 4,
             Event::Output(_) => 5,
             Event::Result(_) => 6,
@@ -35,7 +35,11 @@ impl<'a> Event<'a> {
                 len += encode_u32(meta.num_tests, &mut into[len..])?;
                 Ok(len)
             }
-            Event::Test(id) => Ok(encode_u32(id, into)?),
+            Event::Test(id, no_human_interaction) => {
+                let mut len = encode_u32(id, into)?;
+                len += encode_bool(no_human_interaction, &mut into[len..])?;
+                Ok(len)
+            }
             Event::Context(context) => {
                 let mut len = encode_str(context.name, into)?;
                 len += encode_str(context.description, &mut into[len..])?;
@@ -74,7 +78,8 @@ impl<'a> Event<'a> {
             }
             3 => {
                 let id = decode_u32(from)?;
-                Event::Test(id)
+                let no_human_interaction = decode_bool(&from[4..])?;
+                Event::Test(id, no_human_interaction)
             }
             4 => {
                 let mut len = 0_usize;

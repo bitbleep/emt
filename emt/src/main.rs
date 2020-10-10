@@ -16,8 +16,14 @@ fn main() {
 
     match opt {
         CliOptions::Run(opt) => match opt.link.to_lowercase().as_str() {
-            "probe" => run(Probe::new().expect("failed to attach probe")),
-            "hosted" => run(Hosted::new(&opt.domain, opt.port).expect("failed to connect to host")),
+            "probe" => run(
+                Probe::new().expect("failed to attach probe"),
+                opt.no_human_interaction,
+            ),
+            "hosted" => run(
+                Hosted::new(&opt.domain, opt.port).expect("failed to connect to host"),
+                opt.no_human_interaction,
+            ),
             _ => panic!("unsupported link: supported values are probe or hosted"),
         },
         CliOptions::Host(opt) => futures::executor::block_on(async {
@@ -26,7 +32,7 @@ fn main() {
     }
 }
 
-fn run<T>(link: T)
+fn run<T>(link: T, no_human_interaction: bool)
 where
     T: Link,
 {
@@ -47,7 +53,7 @@ where
     );
 
     for id in 0..meta.num_tests {
-        let result = match runner.run(id) {
+        let result = match runner.run(id, no_human_interaction) {
             Ok(result) => result,
             Err(err) => {
                 eprintln!("Failed to get run test {}: {:?}", id, err);
