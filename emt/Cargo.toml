@@ -5,7 +5,7 @@ authors = ["Martin Carltoft <martin@bitbleep.com>"]
 edition = "2018"
 
 [dependencies]
-rt-core = { path = "../rt-core" }
+emt-core = { path = "../emt-core" }
 probe-rs = "0.8.0"
 colored = "2"
 structopt = "0.3.18"

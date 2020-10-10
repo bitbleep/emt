@@ -1,5 +1,5 @@
 [package]
-name = "rt-core"
+name = "emt-core"
 version = "0.1.0"
 authors = ["Martin Carltoft <martin@bitbleep.com>"]
 edition = "2018"

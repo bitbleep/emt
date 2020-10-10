@@ -3,7 +3,7 @@ use std::time::{Duration, Instant};
 
 use colored::*;
 
-use rt_core::{
+use emt_core::{
     runtime::{self, decode_u32, encode_u32, Event, Runtime, Status, TestStatus},
     TestResult,
 };

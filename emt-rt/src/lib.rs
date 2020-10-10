@@ -11,12 +11,12 @@ use core::{
     sync::atomic::{self, Ordering},
 };
 
-pub use rt_core::{
+pub use emt_core::{
     runtime::{Error, Meta},
     Test, TestContext, TestResult,
 };
 
-use rt_core::runtime::RuntimeBlock;
+use emt_core::runtime::RuntimeBlock;
 
 /// Tests two values for equality.
 ///

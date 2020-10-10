@@ -558,13 +558,17 @@ version = "0.1.0"
 dependencies = [
  "actix-web 3.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "colored 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "emt-core 0.1.0",
  "futures 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "probe-rs 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.10.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "rt-core 0.1.0",
  "serde 1.0.116 (registry+https://github.com/rust-lang/crates.io-index)",
  "structopt 0.3.18 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
+
+[[package]]
+name = "emt-core"
+version = "0.1.0"
 
 [[package]]
 name = "encoding_rs"
@@ -1535,10 +1539,6 @@ dependencies = [
 name = "rle-decode-fast"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "rt-core"
-version = "0.1.0"
 
 [[package]]
 name = "rusb"
