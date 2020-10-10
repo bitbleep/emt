@@ -32,7 +32,8 @@ impl RuntimeBlock {
     /// the runtime in device RAM.
     ///
     pub fn init(&mut self) {
-        self.magic_sequence = *b"EMT-RUNTIME ";
+        self.magic_sequence
+            .copy_from_slice(&crate::runtime::MAGIC_SEQUENCE);
         self.status = Status::Idle;
         self.test_status = TestStatus::NotRunning.try_into().expect("illegal status");
         self.event_id = Event::None.id();
@@ -40,22 +41,14 @@ impl RuntimeBlock {
 
     pub fn begin_test(&mut self, should_panic: bool) -> Result<(), Error> {
         let test_status = TestStatus::Running { should_panic }.try_into()?;
-        unsafe {
-            Ok(core::ptr::write_volatile(
-                &mut self.test_status,
-                test_status,
-            ))
-        }
+        unsafe { core::ptr::write_volatile(&mut self.test_status, test_status) }
+        Ok(())
     }
 
     pub fn end_test(&mut self) -> Result<(), Error> {
         let test_status = TestStatus::NotRunning.try_into()?;
-        unsafe {
-            Ok(core::ptr::write_volatile(
-                &mut self.test_status,
-                test_status,
-            ))
-        }
+        unsafe { core::ptr::write_volatile(&mut self.test_status, test_status) }
+        Ok(())
     }
 
     pub fn fail_test(&mut self) -> Result<(), Error> {
@@ -130,7 +123,8 @@ impl Runtime for RuntimeBlock {
     }
 
     fn set_status(&mut self, status: Status) -> Result<(), Error> {
-        unsafe { Ok(core::ptr::write_volatile(&mut self.status, status)) }
+        unsafe { core::ptr::write_volatile(&mut self.status, status) }
+        Ok(())
     }
 
     fn test_status(&mut self) -> Result<TestStatus, Error> {

@@ -4,6 +4,10 @@ mod runtime_block;
 pub use event::{decode_u32, encode_u32, Event};
 pub use runtime_block::RuntimeBlock;
 
+pub const MAGIC_SEQUENCE: [u8; 12] = [
+    0x45, 0x4d, 0x54, 0x2d, 0x52, 0x55, 0x4e, 0x54, 0x49, 0x4d, 0x45, 0x20,
+];
+
 #[derive(Debug, Copy, Clone)]
 pub struct Meta<'a> {
     pub id: &'a str,

@@ -1,6 +1,7 @@
 use probe_rs::{MemoryInterface, Session};
 
 use crate::link::{Error, Link};
+use emt_core::runtime::MAGIC_SEQUENCE;
 
 pub struct Probe {
     base_address: u32,
@@ -45,15 +46,11 @@ impl Link for Probe {
     }
 
     fn read(&mut self, address: u32, data: &mut [u8]) -> Result<usize, Error> {
-        let mut core = self.session.core(0).map_err(|_| Error::Io)?;
-        core.read_8(address, data).map_err(|_| Error::Io)?;
-        Ok(data.len())
+        read(&mut self.session, address, data)
     }
 
     fn write(&mut self, address: u32, data: &[u8]) -> Result<usize, Error> {
-        let mut core = self.session.core(0).map_err(|_| Error::Io)?;
-        core.write_8(address, data).map_err(|_| Error::Io)?;
-        Ok(data.len())
+        write(&mut self.session, address, data)
     }
 }
 
@@ -63,11 +60,11 @@ fn read(session: &mut Session, address: u32, data: &mut [u8]) -> Result<usize, E
     Ok(data.len())
 }
 
-/// "EMT-RUNTIME "
-// todo: this should live in common i think
-const MAGIC_SEQUENCE: [u8; 12] = [
-    0x45, 0x4d, 0x54, 0x2d, 0x52, 0x55, 0x4e, 0x54, 0x49, 0x4d, 0x45, 0x20,
-];
+fn write(session: &mut Session, address: u32, data: &[u8]) -> Result<usize, Error> {
+    let mut core = session.core(0).map_err(|_| Error::Io)?;
+    core.write_8(address, data).map_err(|_| Error::Io)?;
+    Ok(data.len())
+}
 
 fn detect_runtime(session: &mut Session, base_address: u32, size: u32) -> Result<u32, Error> {
     let mut buf = [0u8; 1024];

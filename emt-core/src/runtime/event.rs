@@ -133,10 +133,10 @@ pub fn encode_str(value: &str, into: &mut [u8]) -> Result<usize, Error> {
     Ok(len + 1)
 }
 
-pub fn decode_str<'a>(from: &'a [u8]) -> Result<(&'a str, usize), Error> {
+pub fn decode_str(from: &[u8]) -> Result<(&str, usize), Error> {
     let mut len = 0_usize;
-    for index in 0..from.len() {
-        if from[index] == 0 {
+    for (index, value) in from.iter().enumerate() {
+        if *value == 0 {
             len = index + 1;
             break;
         }
@@ -151,7 +151,7 @@ pub fn decode_str<'a>(from: &'a [u8]) -> Result<(&'a str, usize), Error> {
 }
 
 fn encode_bool(value: bool, into: &mut [u8]) -> Result<usize, Error> {
-    if into.len() < 1 {
+    if into.is_empty() {
         return Err(Error::BufferOverflow);
     }
     into[0] = match value {
@@ -162,7 +162,7 @@ fn encode_bool(value: bool, into: &mut [u8]) -> Result<usize, Error> {
 }
 
 fn decode_bool(from: &[u8]) -> Result<bool, Error> {
-    if from.len() < 1 {
+    if from.is_empty() {
         return Err(Error::BufferOverflow);
     }
     match from[0] {
