@@ -105,7 +105,7 @@ where
 
     pub fn meta(&mut self) -> Result<RuntimeMeta, Error> {
         print!("waiting for idle runtime.. ");
-        while self.status() != Status::Idle {}
+        while self.status()? != Status::Idle {}
         println!("ok");
         let meta = match self.request(Event::MetaRequest)? {
             Event::Meta(meta) => RuntimeMeta {
@@ -115,7 +115,7 @@ where
             },
             _ => return Err(Error::RuntimeError(runtime::Error::UnexpectedEvent)),
         };
-        self.complete_request();
+        self.complete_request()?;
         Ok(meta)
     }
 
@@ -136,7 +136,7 @@ where
             },
             _ => panic!("unexpected event"),
         };
-        self.complete_request();
+        self.complete_request()?;
 
         println!(
             "\n{} {}; {}",
@@ -192,38 +192,37 @@ impl<T> Runtime for Runner<T>
 where
     T: Link,
 {
-    fn status(&mut self) -> Status {
+    fn status(&mut self) -> Result<Status, runtime::Error> {
         self.device_link
             .read(
                 self.device_link.base_address() + OFFSET_STATUS_ID as u32,
                 &mut self.io_buf[OFFSET_STATUS_ID..OFFSET_STATUS_ID + 4],
             )
-            .unwrap();
-        let status_id =
-            decode_u32(&self.io_buf[OFFSET_STATUS_ID..]).expect("failed to decode status");
-        Status::from_u32(status_id)
+            .map_err(|_| runtime::Error::Io)?;
+        let status_id = decode_u32(&self.io_buf[OFFSET_STATUS_ID..])?;
+        Ok(Status::from_u32(status_id))
     }
 
-    fn set_status(&mut self, status: Status) {
-        encode_u32(status.to_u32(), &mut self.io_buf[OFFSET_STATUS_ID..])
-            .expect("failed to encode status");
+    fn set_status(&mut self, status: Status) -> Result<(), runtime::Error> {
+        encode_u32(status.to_u32(), &mut self.io_buf[OFFSET_STATUS_ID..])?;
         self.device_link
             .write(
                 self.device_link.base_address() + OFFSET_STATUS_ID as u32,
                 &mut self.io_buf[OFFSET_STATUS_ID..OFFSET_STATUS_ID + 4],
             )
-            .unwrap();
+            .map_err(|_| runtime::Error::Io)?;
+        Ok(())
     }
 
-    fn test_status(&mut self) -> TestStatus {
+    fn test_status(&mut self) -> Result<TestStatus, runtime::Error> {
         self.device_link
             .read(
                 self.device_link.base_address() + OFFSET_TEST_STATUS as u32,
                 &mut self.io_buf[OFFSET_TEST_STATUS..OFFSET_TEST_STATUS + 4],
             )
-            .unwrap();
-        let test_status = decode_u32(&self.io_buf[OFFSET_TEST_STATUS..]).unwrap();
-        TestStatus::try_from(test_status).unwrap()
+            .map_err(|_| runtime::Error::Io)?;
+        let test_status = decode_u32(&self.io_buf[OFFSET_TEST_STATUS..])?;
+        TestStatus::try_from(test_status)
     }
 
     fn encode_event(&mut self, event: Event) -> Result<(), runtime::Error> {

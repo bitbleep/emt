@@ -56,26 +56,26 @@ impl RuntimeBlock {
     }
 
     pub fn fail_test(&mut self) -> Result<(), Error> {
-        if !self.test_status().is_running() {
+        if !self.test_status()?.is_running() {
             return Err(Error::NoTestRunning);
         }
         self.request(Event::Result(TestResult::AssertionFail))?;
-        self.complete_request();
+        self.complete_request()?;
         self.end_test();
         Ok(())
     }
 
     pub fn output(&mut self, message: &str) -> Result<(), Error> {
-        if !self.test_status().is_running() {
+        if !self.test_status()?.is_running() {
             return Err(Error::NoTestRunning);
         }
         self.request(Event::Output(message))?;
-        self.complete_request();
+        self.complete_request()?;
         Ok(())
     }
 
     pub fn handle_panic(&mut self) -> Result<(), Error> {
-        match self.test_status() {
+        match self.test_status()? {
             TestStatus::Running { should_panic } => {
                 let result = match should_panic {
                     true => TestResult::Pass,
@@ -83,7 +83,7 @@ impl RuntimeBlock {
                 };
                 let result_response = Event::Result(result);
                 self.request(result_response)?;
-                self.complete_request();
+                self.complete_request()?;
                 self.end_test();
             }
             TestStatus::NotRunning => {}
@@ -108,7 +108,7 @@ impl RuntimeBlock {
                     (test.run)();
                     let result_response = Event::Result(TestResult::Pass);
                     self.request(result_response)?;
-                    self.complete_request();
+                    self.complete_request()?;
                     self.end_test();
                 } else {
                     let result_response = Event::Result(TestResult::NotFound);
@@ -122,19 +122,17 @@ impl RuntimeBlock {
 }
 
 impl Runtime for RuntimeBlock {
-    fn status(&mut self) -> Status {
-        unsafe { core::ptr::read_volatile(&self.status) }
+    fn status(&mut self) -> Result<Status, Error> {
+        unsafe { Ok(core::ptr::read_volatile(&self.status)) }
     }
 
-    fn set_status(&mut self, status: Status) {
-        unsafe {
-            core::ptr::write_volatile(&mut self.status, status);
-        }
+    fn set_status(&mut self, status: Status) -> Result<(), Error> {
+        unsafe { Ok(core::ptr::write_volatile(&mut self.status, status)) }
     }
 
-    fn test_status(&mut self) -> TestStatus {
+    fn test_status(&mut self) -> Result<TestStatus, Error> {
         let test_status = unsafe { core::ptr::read_volatile(&self.test_status) };
-        TestStatus::try_from(test_status).expect("illegal test status")
+        TestStatus::try_from(test_status)
     }
 
     fn encode_event(&mut self, event: Event) -> Result<(), Error> {
