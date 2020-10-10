@@ -1,6 +1,6 @@
 use probe_rs::{MemoryInterface, Session};
 
-use crate::runner::{DeviceLink, Error};
+use crate::link::{Error, Link};
 
 pub struct Probe {
     base_address: u32,
@@ -30,7 +30,7 @@ impl Probe {
     }
 }
 
-impl DeviceLink for Probe {
+impl Link for Probe {
     fn base_address(&self) -> u32 {
         self.base_address
     }
@@ -86,5 +86,5 @@ fn detect_runtime(session: &mut Session, base_address: u32, size: u32) -> Result
         }
         address += len as u32;
     }
-    Err(Error::NoRuntime)
+    Err(Error::NoRuntimeFound)
 }

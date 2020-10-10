@@ -3,8 +3,7 @@ use std::sync::Mutex;
 use actix_web::{get, post, web, HttpResponse};
 
 use crate::host::models::*;
-use crate::link::Probe;
-use crate::runner::DeviceLink;
+use crate::link::{Link, Probe};
 
 #[get("/probe")]
 async fn get_probe(probe: web::Data<Mutex<Probe>>) -> HttpResponse {

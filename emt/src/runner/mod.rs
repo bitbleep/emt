@@ -3,6 +3,7 @@ use std::time::{Duration, Instant};
 
 use colored::*;
 
+use crate::link::{self, Link};
 use emt_core::{
     runtime::{self, decode_u32, encode_u32, Event, Runtime, Status, TestStatus},
     TestResult,
@@ -10,14 +11,19 @@ use emt_core::{
 
 #[derive(Debug, Copy, Clone)]
 pub enum Error {
-    AttachFailed,
-    NoRuntime,
     RuntimeError(runtime::Error),
+    LinkError(link::Error),
 }
 
 impl From<runtime::Error> for Error {
     fn from(error: runtime::Error) -> Self {
         Self::RuntimeError(error)
+    }
+}
+
+impl From<link::Error> for Error {
+    fn from(error: link::Error) -> Self {
+        Self::LinkError(error)
     }
 }
 
@@ -78,16 +84,9 @@ impl TestReport {
     }
 }
 
-pub trait DeviceLink {
-    fn base_address(&self) -> u32;
-    fn reset(&mut self) -> Result<(), Error>;
-    fn read(&mut self, address: u32, data: &mut [u8]) -> Result<usize, Error>;
-    fn write(&mut self, address: u32, data: &[u8]) -> Result<usize, Error>;
-}
-
 pub struct Runner<T>
 where
-    T: DeviceLink,
+    T: Link,
 {
     device_link: T,
     io_buf: [u8; 512],
@@ -95,7 +94,7 @@ where
 
 impl<T> Runner<T>
 where
-    T: DeviceLink,
+    T: Link,
 {
     pub fn new(device_link: T) -> Self {
         Self {
@@ -191,7 +190,7 @@ const OFFSET_DATA: usize = 32;
 
 impl<T> Runtime for Runner<T>
 where
-    T: DeviceLink,
+    T: Link,
 {
     fn status(&mut self) -> Status {
         self.device_link

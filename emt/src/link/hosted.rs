@@ -1,5 +1,5 @@
 use crate::host::models::*;
-use crate::runner::{DeviceLink, Error};
+use crate::link::{Error, Link};
 
 pub struct Hosted {
     client: reqwest::blocking::Client,
@@ -15,19 +15,24 @@ impl Hosted {
         let probe = client
             .get(&format!("{}/probe", base_url))
             .send()
-            .unwrap()
+            .map_err(|_| Error::Io)?
             .json::<ProbeInfo>()
-            .unwrap();
+            .map_err(|_| Error::Decoding)?;
+
+        let base_address = match probe.base_address {
+            Some(addr) => addr,
+            None => return Err(Error::NoRuntimeFound),
+        };
 
         Ok(Self {
             client,
             base_url: base_url.to_owned(),
-            base_address: probe.base_address.unwrap(),
+            base_address: base_address,
         })
     }
 }
 
-impl DeviceLink for Hosted {
+impl Link for Hosted {
     fn base_address(&self) -> u32 {
         self.base_address
     }
@@ -40,9 +45,9 @@ impl DeviceLink for Hosted {
             .post(&format!("{}/reset", self.base_url))
             .json::<Reset>(&body)
             .send()
-            .unwrap()
+            .map_err(|_| Error::Io)?
             .json::<Reset>()
-            .unwrap();
+            .map_err(|_| Error::Decoding)?;
 
         Ok(())
     }
@@ -58,9 +63,9 @@ impl DeviceLink for Hosted {
             .post(&format!("{}/read", self.base_url))
             .json::<ReadParams>(&body)
             .send()
-            .unwrap()
+            .map_err(|_| Error::Io)?
             .json::<ReadResult>()
-            .unwrap();
+            .map_err(|_| Error::Decoding)?;
 
         data.copy_from_slice(&res.data);
         Ok(res.data.len())
@@ -77,9 +82,9 @@ impl DeviceLink for Hosted {
             .post(&format!("{}/write", self.base_url))
             .json::<WriteParams>(&body)
             .send()
-            .unwrap()
+            .map_err(|_| Error::Io)?
             .json::<WriteResult>()
-            .unwrap();
+            .map_err(|_| Error::Decoding)?;
 
         Ok(res.len)
     }

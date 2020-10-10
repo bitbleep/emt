@@ -7,8 +7,8 @@ use structopt::StructOpt;
 
 use crate::{
     cli::CliOptions,
-    link::{Hosted, Probe},
-    runner::{DeviceLink, Runner, TestReport},
+    link::{Hosted, Link, Probe},
+    runner::{Runner, TestReport},
 };
 
 fn main() {
@@ -28,7 +28,7 @@ fn main() {
 
 fn run<T>(link: T)
 where
-    T: DeviceLink,
+    T: Link,
 {
     let mut runner = Runner::new(link);
     let mut report = TestReport::new();
