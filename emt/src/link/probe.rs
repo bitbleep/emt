@@ -9,15 +9,15 @@ pub struct Probe {
 
 impl Probe {
     pub fn new() -> Result<Self, Error> {
-        let mut session = Session::auto_attach("nrf52").map_err(|_err| Error::AttachFailed)?;
+        let mut session = Session::auto_attach("nrf52").map_err(|_| Error::AttachFailed)?;
         println!("auto attached nrf52");
 
         print!("reset device.. ");
         session
             .core(0)
-            .expect("failed to get core")
+            .map_err(|_| Error::Io)?
             .reset()
-            .expect("failed to reset");
+            .map_err(|_| Error::Io)?;
         println!("ok");
 
         let base_address = detect_runtime(&mut session, 0x2000_0000, 0x10000)?;
@@ -38,28 +38,28 @@ impl Link for Probe {
     fn reset(&mut self) -> Result<(), Error> {
         self.session
             .core(0)
-            .expect("failed to get core")
+            .map_err(|_| Error::Io)?
             .reset()
-            .expect("failed to reset");
+            .map_err(|_| Error::Io)?;
         Ok(())
     }
 
     fn read(&mut self, address: u32, data: &mut [u8]) -> Result<usize, Error> {
-        let mut core = self.session.core(0).expect("failed to get core");
-        core.read_8(address, data).expect("failed to read");
+        let mut core = self.session.core(0).map_err(|_| Error::Io)?;
+        core.read_8(address, data).map_err(|_| Error::Io)?;
         Ok(data.len())
     }
 
     fn write(&mut self, address: u32, data: &[u8]) -> Result<usize, Error> {
-        let mut core = self.session.core(0).expect("failed to get core");
-        core.write_8(address, data).expect("failed to read");
+        let mut core = self.session.core(0).map_err(|_| Error::Io)?;
+        core.write_8(address, data).map_err(|_| Error::Io)?;
         Ok(data.len())
     }
 }
 
 fn read(session: &mut Session, address: u32, data: &mut [u8]) -> Result<usize, Error> {
-    let mut core = session.core(0).expect("bah"); // todo: should be errors
-    core.read_8(address, data).expect("waaah");
+    let mut core = session.core(0).map_err(|_| Error::Io)?;
+    core.read_8(address, data).map_err(|_| Error::Io)?;
     Ok(data.len())
 }
 

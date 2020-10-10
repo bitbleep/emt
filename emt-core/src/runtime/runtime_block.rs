@@ -18,7 +18,7 @@ impl RuntimeBlock {
         Self {
             magic_sequence: [0u8; 12],
             status: Status::NotReady,
-            test_status: 0, // todo: TestStatus::NotRunning.try_into().expect("waah"),
+            test_status: 0,
             event_id: Event::None.id(),
             data_size: 0,
             reserved: 0,
@@ -34,24 +34,27 @@ impl RuntimeBlock {
     pub fn init(&mut self) {
         self.magic_sequence = *b"EMT-RUNTIME ";
         self.status = Status::Idle;
+        self.test_status = TestStatus::NotRunning.try_into().expect("illegal status");
         self.event_id = Event::None.id();
     }
 
-    pub fn begin_test(&mut self, should_panic: bool) {
-        let test_status = TestStatus::Running { should_panic }
-            .try_into()
-            .expect("illegal test status");
+    pub fn begin_test(&mut self, should_panic: bool) -> Result<(), Error> {
+        let test_status = TestStatus::Running { should_panic }.try_into()?;
         unsafe {
-            core::ptr::write_volatile(&mut self.test_status, test_status);
+            Ok(core::ptr::write_volatile(
+                &mut self.test_status,
+                test_status,
+            ))
         }
     }
 
-    pub fn end_test(&mut self) {
-        let test_status = TestStatus::NotRunning
-            .try_into()
-            .expect("illegal test status");
+    pub fn end_test(&mut self) -> Result<(), Error> {
+        let test_status = TestStatus::NotRunning.try_into()?;
         unsafe {
-            core::ptr::write_volatile(&mut self.test_status, test_status);
+            Ok(core::ptr::write_volatile(
+                &mut self.test_status,
+                test_status,
+            ))
         }
     }
 
@@ -61,7 +64,7 @@ impl RuntimeBlock {
         }
         self.request(Event::Result(TestResult::AssertionFail))?;
         self.complete_request()?;
-        self.end_test();
+        self.end_test()?;
         Ok(())
     }
 
@@ -84,7 +87,7 @@ impl RuntimeBlock {
                 let result_response = Event::Result(result);
                 self.request(result_response)?;
                 self.complete_request()?;
-                self.end_test();
+                self.end_test()?;
             }
             TestStatus::NotRunning => {}
         }
@@ -102,14 +105,14 @@ impl RuntimeBlock {
                 let id = id as usize;
                 if id < tests.len() {
                     let test = &tests[id];
-                    self.begin_test(test.context.should_panic);
+                    self.begin_test(test.context.should_panic)?;
                     let context_response = Event::Context(test.context);
                     self.respond(context_response)?;
                     (test.run)();
                     let result_response = Event::Result(TestResult::Pass);
                     self.request(result_response)?;
                     self.complete_request()?;
-                    self.end_test();
+                    self.end_test()?;
                 } else {
                     let result_response = Event::Result(TestResult::NotFound);
                     self.request(result_response)?;

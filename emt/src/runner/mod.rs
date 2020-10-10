@@ -123,10 +123,7 @@ where
         // reset board before every test
         self.device_link.reset()?;
 
-        let context = match self
-            .request(Event::Test(id))
-            .expect("failed to inject test")
-        {
+        let context = match self.request(Event::Test(id))? {
             Event::Context(context) => TestContext {
                 name: context.name.to_owned(),
                 description: context.description.to_owned(),
@@ -134,7 +131,7 @@ where
                 should_panic: context.should_panic,
                 timeout_ms: context.timeout_ms,
             },
-            _ => panic!("unexpected event"),
+            _ => return Err(Error::RuntimeError(runtime::Error::UnexpectedEvent)),
         };
         self.complete_request()?;
 
@@ -148,25 +145,22 @@ where
         let start_instant = Instant::now();
 
         loop {
-            let result = match self.try_read() {
-                Ok(Some(Event::Output(message))) => {
+            let result = match self.try_read()? {
+                Some(Event::Output(message)) => {
                     println!("  {}", message);
-                    self.respond(Event::None)
-                        .expect("failed to respond to runtime");
+                    self.respond(Event::None)?;
                     None
                 }
-                Ok(Some(Event::Result(result))) => {
+                Some(Event::Result(result)) => {
                     match result.did_pass() {
                         true => println!("  {}", "pass".green()),
                         false => println!("  {} ({:?})", "fail".red(), result),
                     }
-                    self.respond(Event::None)
-                        .expect("failed to respond to runtime");
+                    self.respond(Event::None)?;
                     Some(result)
                 }
-                Ok(Some(_)) => panic!("unexpected event"),
-                Ok(None) => None,
-                Err(err) => panic!("failed to read from runtime {:?}", err),
+                Some(_) => return Err(Error::RuntimeError(runtime::Error::UnexpectedEvent)),
+                None => None,
             };
 
             if let Some(result) = result {
@@ -229,17 +223,15 @@ where
         let event_id = event.id();
         let data_size = event.encode(&mut self.io_buf[OFFSET_DATA..])? as u32;
 
-        encode_u32(event_id, &mut self.io_buf[OFFSET_EVENT_ID..])
-            .expect("failed to encode event id");
-        encode_u32(data_size, &mut self.io_buf[OFFSET_DATA_SIZE..])
-            .expect("failed to encode data size");
+        encode_u32(event_id, &mut self.io_buf[OFFSET_EVENT_ID..])?;
+        encode_u32(data_size, &mut self.io_buf[OFFSET_DATA_SIZE..])?;
 
         self.device_link
             .write(
                 self.device_link.base_address() + OFFSET_EVENT_ID as u32,
                 &mut self.io_buf[OFFSET_EVENT_ID..OFFSET_EVENT_ID + 12 + data_size as usize],
             )
-            .unwrap();
+            .map_err(|_| runtime::Error::Io)?;
 
         Ok(())
     }
@@ -250,7 +242,7 @@ where
                 self.device_link.base_address() + OFFSET_EVENT_ID as u32,
                 &mut self.io_buf[OFFSET_EVENT_ID..OFFSET_EVENT_ID + 12],
             )
-            .unwrap();
+            .map_err(|_| runtime::Error::Io)?;
 
         let event_id = decode_u32(&self.io_buf[OFFSET_EVENT_ID..])?;
         let data_size = decode_u32(&self.io_buf[OFFSET_DATA_SIZE..])? as usize;
@@ -260,7 +252,7 @@ where
                 self.device_link.base_address() + OFFSET_DATA as u32,
                 &mut self.io_buf[OFFSET_DATA..OFFSET_DATA + data_size],
             )
-            .unwrap();
+            .map_err(|_| runtime::Error::Io)?;
 
         Event::decode(event_id, &self.io_buf[OFFSET_DATA..OFFSET_DATA + data_size])
     }

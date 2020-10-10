@@ -45,7 +45,7 @@ impl core::convert::From<u32> for TestResult {
             2 => TestResult::AssertionFail,
             3 => TestResult::Panic,
             4 => TestResult::Timeout,
-            _ => panic!("failed to convert from TestResult into u32"),
+            _ => panic!("failed to convert from u32 into TestResult"),
         }
     }
 }

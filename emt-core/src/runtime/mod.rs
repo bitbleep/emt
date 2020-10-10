@@ -29,7 +29,7 @@ impl Status {
             1 => Status::Idle,
             2 => Status::Send,
             3 => Status::Receive,
-            _ => panic!("fudge"),
+            _ => panic!("failed to convert from u32 into Status"),
         }
     }
 
