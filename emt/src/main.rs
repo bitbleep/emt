@@ -17,7 +17,7 @@ fn main() {
     match opt {
         CliOptions::Run(opt) => match opt.link.to_lowercase().as_str() {
             "probe" => run(
-                Probe::new().expect("failed to attach probe"),
+                Probe::new(opt.probe_id, &opt.probe_target).expect("failed to attach probe"),
                 opt.no_human_interaction,
             ),
             "hosted" => run(

@@ -9,9 +9,16 @@ pub struct Probe {
 }
 
 impl Probe {
-    pub fn new() -> Result<Self, Error> {
-        let mut session = Session::auto_attach("nrf52").map_err(|_| Error::AttachFailed)?;
-        println!("auto attached nrf52");
+    pub fn new(probe_id: usize, probe_target: &str) -> Result<Self, Error> {
+        let probe_list = probe_rs::Probe::list_all();
+        if probe_id >= probe_list.len() {
+            return Err(Error::AttachFailed);
+        }
+        let mut session = probe_rs::Probe::open(&probe_list[probe_id])
+            .map_err(|_| Error::AttachFailed)?
+            .attach(probe_target)
+            .map_err(|_| Error::AttachFailed)?;
+        println!("attached probe {}, target: {}", probe_id, probe_target);
 
         print!("reset device.. ");
         session

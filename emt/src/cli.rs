@@ -25,6 +25,14 @@ pub struct RunOptions {
     #[structopt(short = "p", long = "port", default_value = "8080")]
     pub port: u16,
 
+    /// The id of the probe to use (ie. the index in the probe-rs list of connected probes).
+    #[structopt(short = "i", long = "probe-id", default_value = "0")]
+    pub probe_id: usize,
+
+    /// The target name of the probe as known to probe-rs.
+    #[structopt(short = "t", long = "probe-target", default_value = "nrf52")]
+    pub probe_target: String,
+
     /// Skips tests that require human interaction
     #[structopt(short = "n", long)]
     pub no_human_interaction: bool,
@@ -40,4 +48,12 @@ pub struct HostOptions {
     /// The host port.
     #[structopt(short = "p", long = "port", default_value = "8080")]
     pub port: u16,
+
+    /// The id of the probe to use (ie. the index in the probe-rs list of connected probes).
+    #[structopt(short = "i", long = "probe-id", default_value = "0")]
+    pub probe_id: usize,
+
+    /// The target name of the probe as known to probe-rs.
+    #[structopt(short = "t", long = "probe-target", default_value = "nrf52")]
+    pub probe_target: String,
 }
