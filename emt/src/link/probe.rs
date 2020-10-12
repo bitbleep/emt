@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use probe_rs::{
     flashing::{self},
@@ -31,8 +31,7 @@ impl Probe {
 
         if let Some(binary_path) = binary_path {
             print!("flashing elf binary.. ");
-            flashing::download_file(&mut session, &binary_path, flashing::Format::Elf)
-                .map_err(|_| Error::FlashingFailed)?;
+            flash(&mut session, &binary_path)?;
             println!("ok");
         }
 
@@ -68,6 +67,10 @@ impl Link for Probe {
         Ok(())
     }
 
+    fn flash(&mut self, path: &Path) -> Result<(), Error> {
+        flash(&mut self.session, path)
+    }
+
     fn read(&mut self, address: u32, data: &mut [u8]) -> Result<usize, Error> {
         read(&mut self.session, address, data)
     }
@@ -87,6 +90,10 @@ fn write(session: &mut Session, address: u32, data: &[u8]) -> Result<usize, Erro
     let mut core = session.core(0).map_err(|_| Error::Io)?;
     core.write_8(address, data).map_err(|_| Error::Io)?;
     Ok(data.len())
+}
+
+fn flash(session: &mut Session, path: &Path) -> Result<(), Error> {
+    flashing::download_file(session, path, flashing::Format::Elf).map_err(|_| Error::FlashingFailed)
 }
 
 fn detect_runtime(session: &mut Session, base_address: u32, size: u32) -> Result<u32, Error> {

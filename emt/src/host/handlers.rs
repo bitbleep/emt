@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::sync::Mutex;
 
 use actix_web::{get, post, web, HttpResponse};
@@ -49,4 +50,19 @@ async fn post_write(
         address: params.address,
         len: params.data.len(),
     })
+}
+
+#[post("/binary")]
+async fn post_binary(
+    probe: web::Data<Mutex<Probe>>,
+    params: web::Json<BinaryParams>,
+) -> HttpResponse {
+    println!("binary: {} byte(s)", params.data.len());
+    let mut probe = probe.lock().unwrap();
+    // todo: write to a temporary file using a better name
+    let path = Path::new("temp.bin");
+    std::fs::write(path, &params.data).unwrap();
+    probe.flash(&path).unwrap();
+    std::fs::remove_file(path).unwrap();
+    HttpResponse::Ok().json(BinaryResponse {})
 }

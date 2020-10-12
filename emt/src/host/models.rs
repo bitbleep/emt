@@ -35,3 +35,11 @@ pub struct WriteResponse {
     pub address: u32,
     pub len: usize,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BinaryParams {
+    pub data: Vec<u8>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BinaryResponse {}

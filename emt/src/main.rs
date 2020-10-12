@@ -22,7 +22,7 @@ fn main() {
                 opt.no_human_interaction,
             ),
             "hosted" => run(
-                Hosted::new(&opt.domain, opt.port).expect("failed to connect to host"),
+                Hosted::new(&opt.domain, opt.port, opt.binary).expect("failed to connect to host"),
                 opt.no_human_interaction,
             ),
             _ => panic!("unsupported link: supported values are probe or hosted"),

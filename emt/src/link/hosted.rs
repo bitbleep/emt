@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use crate::host::models::*;
 use crate::link::{Error, Link};
 
@@ -8,8 +10,8 @@ pub struct Hosted {
 }
 
 impl Hosted {
-    pub fn new(domain: &str, port: u16) -> Result<Self, Error> {
-        let client = reqwest::blocking::Client::new();
+    pub fn new(domain: &str, port: u16, binary_path: Option<PathBuf>) -> Result<Self, Error> {
+        let mut client = reqwest::blocking::Client::new();
         let base_url = format!("http://{}:{}", domain, port);
 
         let probe = client
@@ -18,6 +20,14 @@ impl Hosted {
             .map_err(|_| Error::Io)?
             .json::<ProbeResponse>()
             .map_err(|_| Error::Decoding)?;
+
+        if let Some(binary_path) = binary_path {
+            print!("flashing elf binary.. ");
+            flash(&mut client, &base_url, &binary_path)?;
+            println!("ok");
+        }
+
+        reset(&mut client, &base_url)?;
 
         let base_address = match probe.base_address {
             Some(addr) => addr,
@@ -38,18 +48,11 @@ impl Link for Hosted {
     }
 
     fn reset(&mut self) -> Result<(), Error> {
-        let body = ResetParams {};
+        reset(&mut self.client, &self.base_url)
+    }
 
-        let _ = self
-            .client
-            .post(&format!("{}/reset", self.base_url))
-            .json::<ResetParams>(&body)
-            .send()
-            .map_err(|_| Error::Io)?
-            .json::<ResetResponse>()
-            .map_err(|_| Error::Decoding)?;
-
-        Ok(())
+    fn flash(&mut self, path: &Path) -> Result<(), Error> {
+        flash(&mut self.client, &self.base_url, path)
     }
 
     fn read(&mut self, address: u32, data: &mut [u8]) -> Result<usize, Error> {
@@ -88,4 +91,38 @@ impl Link for Hosted {
 
         Ok(res.len)
     }
+}
+
+fn reset(client: &mut reqwest::blocking::Client, base_url: &str) -> Result<(), Error> {
+    let body = ResetParams {};
+
+    let _ = client
+        .post(&format!("{}/reset", base_url))
+        .json::<ResetParams>(&body)
+        .send()
+        .map_err(|_| Error::Io)?
+        .json::<ResetResponse>()
+        .map_err(|_| Error::Decoding)?;
+
+    Ok(())
+}
+
+fn flash(
+    client: &mut reqwest::blocking::Client,
+    base_url: &str,
+    binary_path: &Path,
+) -> Result<(), Error> {
+    let body = BinaryParams {
+        data: std::fs::read(binary_path).map_err(|_| Error::Io)?,
+    };
+
+    let _ = client
+        .post(&format!("{}/binary", base_url))
+        .json::<BinaryParams>(&body)
+        .send()
+        .map_err(|_| Error::Io)?
+        .json::<BinaryResponse>()
+        .map_err(|_| Error::Decoding)?;
+
+    Ok(())
 }

@@ -16,11 +16,12 @@ pub async fn run(opt: HostOptions) -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(shared_probe.clone())
-            .data(web::JsonConfig::default().limit(4096))
+            .data(web::JsonConfig::default().limit(8388608))
             .service(handlers::get_probe)
             .service(handlers::post_reset)
             .service(handlers::post_read)
             .service(handlers::post_write)
+            .service(handlers::post_binary)
     })
     .bind(base_url)?
     .run()
