@@ -7,6 +7,7 @@ pub use probe::Probe;
 #[derive(Debug, Copy, Clone)]
 pub enum Error {
     AttachFailed,
+    FlashingFailed,
     NoRuntimeFound,
     Io,
     Encoding,

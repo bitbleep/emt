@@ -10,7 +10,7 @@ pub mod models;
 #[actix_web::main]
 pub async fn run(opt: HostOptions) -> std::io::Result<()> {
     let base_url = format!("{}:{}", opt.domain, opt.port);
-    let probe = Probe::new(opt.probe_id, &opt.probe_target).expect("failed to attach probe");
+    let probe = Probe::new(opt.probe_id, &opt.probe_target, None).expect("failed to attach probe");
     let shared_probe = web::Data::new(Mutex::new(probe));
 
     HttpServer::new(move || {

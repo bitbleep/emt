@@ -1,4 +1,9 @@
-use probe_rs::{MemoryInterface, Session};
+use std::path::PathBuf;
+
+use probe_rs::{
+    flashing::{self},
+    MemoryInterface, Session,
+};
 
 use crate::link::{Error, Link};
 use emt_core::runtime::MAGIC_SEQUENCE;
@@ -9,7 +14,11 @@ pub struct Probe {
 }
 
 impl Probe {
-    pub fn new(probe_id: usize, probe_target: &str) -> Result<Self, Error> {
+    pub fn new(
+        probe_id: usize,
+        probe_target: &str,
+        binary_path: Option<PathBuf>,
+    ) -> Result<Self, Error> {
         let probe_list = probe_rs::Probe::list_all();
         if probe_id >= probe_list.len() {
             return Err(Error::AttachFailed);
@@ -19,6 +28,13 @@ impl Probe {
             .attach(probe_target)
             .map_err(|_| Error::AttachFailed)?;
         println!("attached probe {}, target: {}", probe_id, probe_target);
+
+        if let Some(binary_path) = binary_path {
+            print!("flashing elf binary.. ");
+            flashing::download_file(&mut session, &binary_path, flashing::Format::Elf)
+                .map_err(|_| Error::FlashingFailed)?;
+            println!("ok");
+        }
 
         print!("reset device.. ");
         session

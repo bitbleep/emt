@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -36,6 +38,10 @@ pub struct RunOptions {
     /// Skips tests that require human interaction
     #[structopt(short = "n", long)]
     pub no_human_interaction: bool,
+
+    /// An optional ELF binary to flash onto the device
+    #[structopt(long = "bin")]
+    pub binary: Option<PathBuf>,
 }
 
 #[derive(StructOpt, Debug)]
